@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Manipulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 200px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1abc9c;
+        }
+    </style>
+</head>
+<body>
+<button id="wrapButton">Оборачивать в <h1></button>
+<button id="deleteButton">Удалить выделенный текст</button>
+<button id="addStylesButton">Добавить стили и кнопки</button>
+<button id="removeTextButton">Удалить текст по строке</button>
+<button id="replaceButton" class="actionButton">Заменить выделенный текст</button>
+<button id="copyCodeButton">Скопировать код документа</button>
+<button id="addUniqueIdsButton">Добавить уникальные ID</button>
+<button id="tocBtn">Добавить генерацию оглавления</button>
+<button id="encryptButton">Зашифровать dir="ltr" в Base64</button>
+<button id="removeClassesBtn">Удалить все классы</button><br><br>
+<button id="deleteTagsBtn">удалить теги по запросу</button><br><br>
+<button id="addMetaButton">Добавить мета-теги</button> <!-- Новая кнопка -->
+<button id="addStyleToDivsButton">Добавить стиль к ответам</button> <!-- Новая кнопка -->
+<button id="removeDataAttributesButton">Удалить все data-* кроме data-id и data-base</button>
+
+<script src="popup.js"></script>
+</body>
+</html>
