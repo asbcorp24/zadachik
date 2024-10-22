@@ -77,46 +77,73 @@ function addStylesAndButtons() {
     };
 const createArrowSVG = () => {
     // Создаем SVG элемент
-    const svgNamespace = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNamespace, "svg");
-    svg.setAttribute("width", "10");
-    svg.setAttribute("height", "10");
-    
-    // Создаем путь стрелки
-    const path = document.createElementNS(svgNamespace, "path");
-    path.setAttribute("d", "M5 0 L10 10 H0 Z"); // Стрелка вверх
-    path.setAttribute("fill", "black"); // Цвет стрелки
+   const xmlns = "http://www.w3.org/2000/svg";
 
-    // Добавляем путь в SVG
-    svg.appendChild(path);
+// Create the main SVG element
+const svg = document.createElementNS(xmlns, "svg");
+svg.setAttribute("width", "24");
+svg.setAttribute("height", "24");
+svg.setAttribute("viewBox", "0 0 24 24");
+svg.setAttribute("fill", "none");
+svg.setAttribute("stroke", "black");
+svg.setAttribute("stroke-width", "2");
+svg.setAttribute("stroke-linecap", "round");
+svg.setAttribute("stroke-linejoin", "round");
+
+// Create the path element
+const path = document.createElementNS(xmlns, "path");
+path.setAttribute("d", "M12 19V5M5 12l7-7 7 7");
+
+// Append path to SVG
+svg.appendChild(path);
+
+// Append SVG to the document body (or any other element)
 
     return svg;
 };
-/* 
+ 
 const createRefreshSVG = () => {
-    // Создаем SVG элемент
-    const svgNamespace = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNamespace, "svg");
-    svg.setAttribute("width", "24");
-    svg.setAttribute("height", "24");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    
-    // Создаем путь для символа смены (обновления)
-    const path = document.createElementNS(svgNamespace, "path");
-    path.setAttribute("d", "M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z");
-    path.setAttribute("fill", "black"); // Цвет символа
+   const xmlns = "http://www.w3.org/2000/svg";
 
-    // Добавляем путь в SVG
-    svg.appendChild(path);
+// Create the main SVG element
+const svg = document.createElementNS(xmlns, "svg");
+svg.setAttribute("width", "24");
+svg.setAttribute("height", "24");
+svg.setAttribute("viewBox", "0 0 24 24");
+svg.setAttribute("fill", "none");
+svg.setAttribute("stroke", "black");
+svg.setAttribute("stroke-width", "2");
+svg.setAttribute("stroke-linecap", "round");
+svg.setAttribute("stroke-linejoin", "round");
+
+// Create the circle element
+const circle = document.createElementNS(xmlns, "circle");
+circle.setAttribute("cx", "12");
+circle.setAttribute("cy", "12");
+circle.setAttribute("r", "10");
+circle.setAttribute("stroke", "black");
+circle.setAttribute("fill", "none");
+
+// Create the rectangle element
+const rect = document.createElementNS(xmlns, "rect");
+rect.setAttribute("x", "8");
+rect.setAttribute("y", "8");
+rect.setAttribute("width", "8");
+rect.setAttribute("height", "8");
+rect.setAttribute("fill", "currentColor");
+
+// Append circle and rect to SVG
+svg.appendChild(circle);
+svg.appendChild(rect);
 
     return svg;
-};*/
+};
 // Добавляем стрелку в body
 backButton.appendChild(createArrowSVG());
     const toggleColorButton = document.createElement("button");
     toggleColorButton.className = "actionButton";
     toggleColorButton.id="actionButton";
-    toggleColorButton.textContent = "Переключить цвета";
+    toggleColorButton.textContent = "";
     let isDarkMode = false;
     toggleColorButton.onclick = () => {
         if (isDarkMode) {
@@ -130,7 +157,7 @@ backButton.appendChild(createArrowSVG());
         }
     };
 	
-//toggleColorButton.appendChild(createArrowSVG());
+ toggleColorButton.appendChild(createRefreshSVG());
 /*
 // Добавляем символ в body
 document.body.appendChild(createRefreshSVG());*/
@@ -142,7 +169,7 @@ document.body.appendChild(createRefreshSVG());*/
     // Добавляем оглавление в начало страницы
     document.body.insertBefore(toc, document.body.firstChild);
     const script = document.createElement('script');
-    script.setAttribute("nonce","abc124");
+    //script.setAttribute("nonce","abc124");
     script.id="sbit";
     script.textContent = ` document.getElementById("backButton").addEventListener("click", function() {
             // Возвращаем пользователя на главную страницу
@@ -621,4 +648,91 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
 
     // ... ваш существующий код ...
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    // Добавление сплэш-скрина
+    if (request.action === "addSplashScreen") {
+        const splashScreen = document.createElement('div');
+        splashScreen.id = 'splashScreen';
+
+        // Стили для сплэш-скрина
+        splashScreen.style.height = '100vh';
+        splashScreen.style.display = 'flex';
+        splashScreen.style.flexDirection = 'column';
+        splashScreen.style.justifyContent = 'center';
+        splashScreen.style.alignItems = 'center';
+        splashScreen.style.background = 'linear-gradient(to bottom, #cbe5ff, white)';
+        splashScreen.style.textAlign = 'center';
+
+        // Заголовок (h1)
+        const title = document.createElement('h1');
+        title.textContent = 'ЕXCEL для статистиков';
+        title.style.fontSize = '48px';
+        title.style.color = '#0b3d91';
+        title.style.margin = '0';
+
+        // Подзаголовок (p)
+        const subtitle = document.createElement('p');
+        subtitle.textContent = 'Cборник задач';
+        subtitle.style.fontSize = '18px';
+        subtitle.style.color = '#555';
+        subtitle.style.margin = '10px 0 30px 0';
+
+        // Автор
+        const author = document.createElement('p');
+        author.textContent = 'Автор: Балабанова Е.А.';
+        author.style.fontSize = '14px';
+        author.style.color = '#333';
+        author.style.marginTop = '50px';
+
+        // Кнопка старта
+        const startButton = document.createElement('button');
+		startButton.id="startButton";
+        startButton.textContent = 'Начать учиться';
+        startButton.style.fontSize = '18px';
+        startButton.style.padding = '15px 30px';
+        startButton.style.backgroundColor = '#0b3d91';
+        startButton.style.color = 'white';
+        startButton.style.border = 'none';
+        startButton.style.borderRadius = '8px';
+        startButton.style.cursor = 'pointer';
+        startButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        startButton.style.transition = 'background-color 0.3s ease';
+
+        
+  const scriptElement = document.createElement('script');
+// Hover-эффект для кнопки
+       scriptElement.textContent =`
+	    const startButton = document.getElementById("startButton");
+	   
+	   startButton.addEventListener('mouseenter', () => {
+            startButton.style.backgroundColor = '#094080';
+        });
+
+        startButton.addEventListener('mouseleave', () => {
+            startButton.style.backgroundColor = '#0b3d91';
+        });
+
+        // Обработчик клика по кнопке
+        startButton.addEventListener('click', () => {
+            document.body.removeChild(splashScreen);  // Удаление сплэш-скрина
+        });
+        // Добавляем элементы на сплэш-скрин
+       `;
+		
+        // Добавляем сплэш-скрин в тело страницы
+		 splashScreen.appendChild(title);
+        splashScreen.appendChild(subtitle);
+        splashScreen.appendChild(startButton);
+        splashScreen.appendChild(author);
+		splashScreen.appendChild(scriptElement);
+        document.body.insertBefore(splashScreen, document.body.firstChild);
+
+        // Глобальные стили для body
+        document.body.style.margin = '0';
+        document.body.style.fontFamily = 'Arial, sans-serif';
+    }
+
+    // Другие обработчики...
 });

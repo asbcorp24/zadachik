@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учебник</title>
+</head>
+<body>
+
+<script>
+    // Create splash screen container
+    const splashScreen = document.createElement('div');
+    splashScreen.id = 'splashScreen';
+
+    // Add styles to splash screen container
+    splashScreen.style.height = '100vh';
+    splashScreen.style.display = 'flex';
+    splashScreen.style.flexDirection = 'column';
+    splashScreen.style.justifyContent = 'center';
+    splashScreen.style.alignItems = 'center';
+    splashScreen.style.background = 'linear-gradient(to bottom, #cbe5ff, white)';
+    splashScreen.style.textAlign = 'center';
+
+    // Create title (h1) element
+    const title = document.createElement('h1');
+    title.textContent = 'Учебник JavaScript';
+    title.style.fontSize = '48px';
+    title.style.color = '#0b3d91';
+    title.style.margin = '0';
+
+    // Create subtitle (p) element
+    const subtitle = document.createElement('p');
+    subtitle.textContent = 'Учите JavaScript шаг за шагом';
+    subtitle.style.fontSize = '18px';
+    subtitle.style.color = '#555';
+    subtitle.style.margin = '10px 0 30px 0';
+
+    // Create author element
+    const author = document.createElement('p');
+    author.textContent = 'Автор: Иван Иванов';
+    author.style.fontSize = '14px';
+    author.style.color = '#333';
+    author.style.marginTop = '50px';
+
+    // Create start button
+    const startButton = document.createElement('button');
+    startButton.textContent = 'Начать учиться';
+    startButton.style.fontSize = '18px';
+    startButton.style.padding = '15px 30px';
+    startButton.style.backgroundColor = '#0b3d91';
+    startButton.style.color = 'white';
+    startButton.style.border = 'none';
+    startButton.style.borderRadius = '8px';
+    startButton.style.cursor = 'pointer';
+    startButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    startButton.style.transition = 'background-color 0.3s ease';
+
+    // Add hover effect on button
+    startButton.addEventListener('mouseenter', () => {
+        startButton.style.backgroundColor = '#094080';
+    });
+
+    startButton.addEventListener('mouseleave', () => {
+        startButton.style.backgroundColor = '#0b3d91';
+    });
+
+    // Event listener for button click
+    startButton.addEventListener('click', () => {
+        alert('Добро пожаловать в учебник!');
+        document.body.removeChild(splashScreen);  // Remove the splash screen after clicking
+    });
+
+    // Append elements to the splash screen
+    splashScreen.appendChild(title);
+    splashScreen.appendChild(subtitle);
+    splashScreen.appendChild(startButton);
+    splashScreen.appendChild(author);
+
+    // Append splash screen to body
+    document.body.appendChild(splashScreen);
+
+    // Add global styles to the body
+    document.body.style.margin = '0';
+    document.body.style.fontFamily = 'Arial, sans-serif';
+</script>
+
+</body>
+</html>
