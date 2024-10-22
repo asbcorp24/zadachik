@@ -1,4 +1,3 @@
-// Функция для оборачивания выделенного текста в <h1>
 function wrapSelectedText() {
 	
     const selection = window.getSelection();
