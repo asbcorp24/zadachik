@@ -68,6 +68,16 @@ function addStylesAndButtons() {
     buttonContainer.style.right = "150px";
     buttonContainer.style.zIndex = 10000;
     buttonContainer.id="bcon";
+
+    const backButton2 = document.createElement("button");
+    backButton2.id="hidebt";
+    backButton2.className = "actionButton";
+
+    backButton2.onclick = () => {
+        window.location.href = '#toc';
+    };
+
+
     const backButton = document.createElement("button");
 	backButton.id="backButton";
     backButton.className = "actionButton";
@@ -138,6 +148,39 @@ svg.appendChild(rect);
 
     return svg;
 };
+    const createhideSVG = () => {
+        const xmlns = "http://www.w3.org/2000/svg";
+
+// Create the main SVG element
+        const svg = document.createElementNS(xmlns, "svg");
+        svg.setAttribute("width", "24");
+        svg.setAttribute("height", "24");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "black");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+
+// Create the circle element
+        const circle = document.createElementNS(xmlns, "circle");
+        circle.setAttribute("cx", "12");
+        circle.setAttribute("cy", "12");
+        circle.setAttribute("r", "10");
+        circle.setAttribute("stroke", "black");
+        circle.setAttribute("fill", "none");
+
+// Create the path element for the question mark
+        const path = document.createElementNS(xmlns, "path");
+        path.setAttribute("d", "M12 16v.01M12 12c0-1.1.9-2 2-2 1.1 0 2 .9 2 2 0 1.1-.9 2-2 2H10v-.01M10 8h1c.6 0 1-.4 1-1s-.4-1-1-1H9c-.6 0-1 .4-1 1s.4 1 1 1z");
+
+// Append circle and path to SVG
+        svg.appendChild(circle);
+        svg.appendChild(path);
+
+        return svg;
+    };
+
 // Добавляем стрелку в body
 backButton.appendChild(createArrowSVG());
     const toggleColorButton = document.createElement("button");
@@ -156,14 +199,56 @@ backButton.appendChild(createArrowSVG());
             isDarkMode = true;
         }
     };
-	
+    const elementhd = document.getElementById("scrhide");
+
+// Проверяем, что элемент найден, и удаляем его
+    if (elementhd) {
+        elementhd.remove();
+    }
+
+    const cript=document.createElement('script');
+    cript.id="scrhide";
+    cript.textContent=` 
+    document.getElementById("hidebt").addEventListener("click", function() {
+    const ltrElements = document.querySelectorAll('[dir="ltr"]');
+
+        ltrElements.forEach((element, index) => {
+            // Сохраняем текущее содержимое элемента
+            const originalContent = element.innerHTML;
+
+            // Создаем кнопку для показа скрытого содержимого
+            const showButton = document.createElement('button');
+            showButton.textContent = 'Показать содержимое';
+            showButton.style.cursor = 'pointer';
+            showButton.style.margin = '10px';
+            showButton.style.padding = '10px';
+            showButton.style.backgroundColor = '#3498db';
+            showButton.style.color = 'white';
+            showButton.style.border = 'none';
+            showButton.style.borderRadius = '5px';
+
+            // Добавляем обработчик на кнопку для показа содержимого
+            showButton.addEventListener('click', function() {
+                element.innerHTML = originalContent; // Восстанавливаем содержимое
+            });
+
+            // Скрываем текущее содержимое и заменяем его кнопкой
+            element.innerHTML = ''; // Очищаем элемент
+            element.appendChild(showButton); // Добавляем кнопку вместо содержимого
+        });
+        });
+`;
+
  toggleColorButton.appendChild(createRefreshSVG());
 /*
 // Добавляем символ в body
 document.body.appendChild(createRefreshSVG());*/
+    backButton2.appendChild(createhideSVG());
+    buttonContainer.appendChild(backButton2);
     buttonContainer.appendChild(backButton);
     buttonContainer.appendChild(toggleColorButton);
     document.body.appendChild(buttonContainer);
+    document.body.appendChild(cript);
 
 
     // Добавляем оглавление в начало страницы
@@ -171,6 +256,7 @@ document.body.appendChild(createRefreshSVG());*/
     const script = document.createElement('script');
     //script.setAttribute("nonce","abc124");
     script.id="sbit";
+
     script.textContent = ` document.getElementById("backButton").addEventListener("click", function() {
             // Возвращаем пользователя на главную страницу
             // Замените 'index.html' на нужный URL вашей главной страницы
@@ -213,7 +299,7 @@ divs.forEach(function(div) {
     metaTag.setAttribute('content', "script-src 'self' 'nonce-abc124';");
 
 // Добавление мета-тега в head документа
-    document.head.appendChild(metaTag);
+  //  document.head.appendChild(metaTag);
 
 }
 
@@ -492,7 +578,7 @@ function encryptDirLtrToBase64() {
     metaTag.setAttribute('content', "script-src 'self' 'nonce-abc123';");
 
 // Добавление мета-тега в head документа
-    document.head.appendChild(metaTag);
+  //  document.head.appendChild(metaTag);
     const script = document.createElement('script');
     script.setAttribute("nonce","abc123");
     script.textContent = `
@@ -590,6 +676,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // Получаем все заголовки <h1>
         const headings = Array.from(document.querySelectorAll('h1'));
 
+
+
+            const charSet = document.createElement('meta');
+            charSet.name = "charSet";
+            charSet.content = "UTF-8"; // Замените на ваш текст копирайта
+            document.head.appendChild(charSet);
         // Создаем мета-теги
         const copyright = document.createElement('meta');
         copyright.name = "copyright";
@@ -653,6 +745,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // Добавление сплэш-скрина
     if (request.action === "addSplashScreen") {
+        const element = document.getElementById("splashScreen");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (element) {
+            element.remove();
+        }
+
         const splashScreen = document.createElement('div');
         splashScreen.id = 'splashScreen';
 
