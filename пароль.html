@@ -28,9 +28,40 @@
             border-radius: 5px;
             cursor: pointer;
             margin-top: 10px;
+            width: 100%;
         }
         button:hover {
             background-color: #218838;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+                max-width: 100%;
+                border-width: 1px;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            h3 {
+                font-size: 1.2em;
+            }
+            button {
+                padding: 12px;
+                font-size: 1em;
+            }
+            input[type="text"] {
+                padding: 8px;
+            }
         }
     </style>
 </head>
@@ -48,43 +79,37 @@
 </div>
 
 <script>
-    // Функция для получения текущей даты в формате YYYYMMDD
     function getCurrentDate() {
         const date = new Date();
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Месяцы начинаются с 0
+        const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        return `${month}${day}`; // Формат YYYYMMDD
+        return `${month}${day}`;
     }
 
-    // Функция для генерации пароля
     function generateNumericPassword(dataId, key) {
-        let combined = dataId + key; // Соединяем data-id и ключ (дату)
+        let combined = dataId + key;
         let hash = 0;
 
-        // Простое хеширование строки (data-id + дата)
         for (let i = 0; i < combined.length; i++) {
-            hash = (hash * 31 + combined.charCodeAt(i)) % 100000; // Ограничиваем 5 цифрами
+            hash = (hash * 31 + combined.charCodeAt(i)) % 100000;
         }
 
-        return String(hash).padStart(5, '0'); // Преобразуем в строку и добавляем ведущие нули, если меньше 5 цифр
+        return String(hash).padStart(5, '0');
     }
 
-    // Функция генерации пароля при нажатии на кнопку
     function generate() {
         const dataId = document.getElementById('dataId').value;
-        const currentDate = getCurrentDate(); // Получаем текущую дату
+        const currentDate = getCurrentDate();
 
-        // Проверяем, что введены оба значения
         if (dataId) {
-            const passwordResult = generateNumericPassword(dataId, currentDate); // Генерируем пароль с текущей датой
-            document.getElementById('result').textContent = passwordResult; // Отображаем пароль
+            const passwordResult = generateNumericPassword(dataId, currentDate);
+            document.getElementById('result').textContent = passwordResult;
         } else {
             alert("Пожалуйста, введите data-id.");
         }
     }
 
-    // Добавляем событие на кнопку
     document.getElementById('generateButton').addEventListener('click', generate);
 </script>
 

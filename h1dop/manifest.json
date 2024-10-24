@@ -5,7 +5,14 @@
     "permissions": [
         "activeTab",
         "scripting"
-    ],
+    ],  "commands": {
+    "add_padding": {
+        "suggested_key": {
+            "default": "Alt+P"
+        },
+        "description": "Обернуть"
+    }
+},
     "action": {
         "default_popup": "popup.html"
     },

@@ -18,7 +18,20 @@
         }
 		
 		
-    </style></head><body class="" style="margin: 0px; font-family: Arial, sans-serif;"><div id="splashScreen" style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(rgb(203, 229, 255), white); text-align: center;"><h1 style="font-size: 48px; color: rgb(11, 61, 145); margin: 0px;">JAVA - полный курс</h1><p style="font-size: 18px; color: rgb(85, 85, 85); margin: 10px 0px 30px;">Cборник задач</p><button id="startButton" style="font-size: 18px; padding: 15px 30px; background-color: rgb(11, 61, 145); color: white; border: none; border-radius: 8px; cursor: pointer; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px; transition: background-color 0.3s;">Начать учиться</button><p style="font-size: 14px; color: rgb(51, 51, 51); margin-top: 50px;">Автор: asbcorp24@gmail.com</p><script>
+    </style></head><body class="" style="margin: 0px; font-family: Arial, sans-serif;"><div id="splashScreen" style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(rgb(203, 229, 255), white); text-align: center;"><h1 style="font-size: 48px; color: rgb(11, 61, 145); margin: 0px;">JAVA - полный курс</h1><p style="font-size: 18px; color: rgb(85, 85, 85); margin: 10px 0px 30px;">Cборник задач</p><button id="startButton" style="font-size: 18px; padding: 15px 30px; background-color: rgb(11, 61, 145); color: white; border: none; border-radius: 8px; cursor: pointer; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px; transition: background-color 0.3s;">Начать учиться</button><p style="font-size: 14px; color: rgb(51, 51, 51); margin-top: 50px;">asbcorp24@gmail.com</p><script>
+    window.onload = function() {
+    // Получаем все элементы div
+    const divs = document.querySelectorAll('div');
+
+    // Проходим по каждому div
+    divs.forEach(function(div) {
+        // Если id элемента не равен "splashScreen", скрываем его
+        if (div.id !== "splashScreen") {
+            div.style.display = 'none';
+        }
+    });
+};
+
 	    const startButton = document.getElementById("startButton");
 	   
 	   startButton.addEventListener('mouseenter', () => {
@@ -32,6 +45,13 @@
         // Обработчик клика по кнопке
         startButton.addEventListener('click', () => {
             document.body.removeChild(splashScreen);  // Удаление сплэш-скрина
+             const divs2 = document.querySelectorAll('div');
+
+    // Проходим по каждому div
+    divs2.forEach(function(div) {
+        // Устанавливаем отображение элемента
+        div.style.display = 'block';  // или 'flex', 'inline', в зависимости от изначального стиля
+    });
         });
         // Добавляем элементы на сплэш-скрин
        </script></div><div id="toc" class=""><h2 class="">Table of Contents</h2><style class="">
@@ -14067,34 +14087,45 @@ timer.schedule(<span class="">new</span> <span class="">TimerTask</span>() {
 lora.send(jsonData);
 </code></div></div></pre></li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Получить данные в виде JSON через LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>:<pre class=""><div class=""><div class="">java</div><div class=""><div class=""><div class=""><span class=""></span></div></div></div><div class="" dir="ltr" style="background-color: white; border: 2px dashed black; border-radius: 10px; padding: 10px;"><code class=""><span class="">String</span> <span class="">jsonData</span> <span class="">=</span> lora.receive();
 </code></div></div></pre></li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для настройки параметров LoRa через командную строку.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Команды.</li><li class=""><strong class="">Пример кода</strong>: (обработайте команды).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для отправки данных в многоточечную сеть.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Адреса получателей.</li><li class=""><strong class="">Пример кода</strong>: (отправьте данные на несколько адресов).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать механизм мониторинга состояния LoRa соединения.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (периодическая проверка состояния).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для управления несколькими LoRa модулями.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (инициализируйте и управляйте модулями).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для передачи данных с разных датчиков.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Данные с датчиков.</li><li class=""><strong class="">Пример кода</strong>: (объедините данные и отправьте).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать функционал для обновления прошивки через LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: URL прошивки.</li><li class=""><strong class="">Пример кода</strong>: (используйте соответствующий механизм).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для управления устройствами через LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Команды управления.</li><li class=""><strong class="">Пример кода</strong>: (отправьте команды и получите ответ).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для сбора данных с нескольких устройств.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (обрабатывайте данные от нескольких источников).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для передачи аудио данных через LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Аудио данные.</li><li class=""><strong class="">Пример кода</strong>: (обработайте аудио и отправьте).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для передачи видео данных через LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Видео данные.</li><li class=""><strong class="">Пример кода</strong>: (обработайте видео и отправьте).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать механизм для управления режимами LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Режимы.</li><li class=""><strong class="">Пример кода</strong>: (измените настройки модуля).</li></ul></li></ol><h4 class="">Сложные задачи (10 задач)</h4><ol class=""><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для передачи данных с использованием шифрования.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Данные для отправки.</li><li class=""><strong class="">Пример кода</strong>: (шифруйте данные перед отправкой).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для автоматического повторного отправления сообщений.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (реализуйте логику повторной отправки).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для анализа производительности LoRa соединения.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (отслеживайте время отправки и получения).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для управления несколькими передатчиками и приемниками.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (инициализируйте и управляйте передатчиками/приемниками).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для анализа данных, полученных через LoRa.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (обработайте и проанализируйте полученные данные).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для передачи данных с использованием различных протоколов.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Протоколы.</li><li class=""><strong class="">Пример кода</strong>: (измените настройки протоколов).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для передачи данных в режиме реального времени.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Данные.</li><li class=""><strong class="">Пример кода</strong>: (используйте асинхронные операции).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для создания отчетов по использованию LoRa соединения.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Никакие.</li><li class=""><strong class="">Пример кода</strong>: (соберите данные и сформируйте отчет).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для автоматического управления параметрами LoRa соединения.</p><ul class=""><li class=""><strong class="">Входные данные</strong>: Условия.</li><li class=""><strong class="">Пример кода</strong>: (измените параметры на основе условий).</li></ul></li><li class=""><p class=""><strong class="">Задача</strong>: Реализовать систему для интеграции LoRa с другими системами (например, IoT).</p><ul class=""><li class=""><strong class="">Входные данные</strong>: API других систем.</li><li class=""><strong class="">Пример кода</strong>: (создайте интеграцию).</li></ul></li></ol><p class=""></p></div></div></div></div></div></div></div></div></article></div></div></div></div></div><div class=""><div class=""><div class=""><div class=""><form class="" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r8:"><div class=""><div class=""></div><div class=""><div class=""></div><div class=""><div class=""><div class="" style="opacity: 1; will-change: auto;"><div class=""><div class=""><div class=""><span class=""></span><span class=""><span class=""></span></span></div></div></div></div></div></div></div></div></form></div></div></div></div></div></main></div><div id="bcon" style="position: fixed; bottom: 20px; right: 150px; z-index: 10000;"><button id="hidebt" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="black" fill="none"></circle><path d="M12 16v.01M12 12c0-1.1.9-2 2-2 1.1 0 2 .9 2 2 0 1.1-.9 2-2 2H10v-.01M10 8h1c.6 0 1-.4 1-1s-.4-1-1-1H9c-.6 0-1 .4-1 1s.4 1 1 1z"></path></svg></button><button id="backButton" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button><button class="actionButton" id="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="black" fill="none"></circle><rect x="8" y="8" width="8" height="8" fill="currentColor"></rect></svg></button></div><script id="scrhide"> 
-    document.getElementById("hidebt").addEventListener("click", function() {
+   document.getElementById("hidebt").addEventListener("click", function() {
     const ltrElements = document.querySelectorAll('[dir="ltr"]');
 
-        ltrElements.forEach((element, index) => {
-            // Сохраняем текущее содержимое элемента
-            const originalContent = element.innerHTML;
+    ltrElements.forEach((element, index) => {
+        // Сохраняем текущее содержимое элемента
+        let originalContent;
+        if (element.hasAttribute('data-base')) {
+            originalContent = element.dataset.base;
+        } else {
+            originalContent = element.innerHTML;
+        }
 
-            // Создаем кнопку для показа скрытого содержимого
-            const showButton = document.createElement('button');
-            showButton.textContent = 'Показать содержимое';
-            showButton.style.cursor = 'pointer';
-            showButton.style.margin = '10px';
-            showButton.style.padding = '10px';
-            showButton.style.backgroundColor = '#3498db';
-            showButton.style.color = 'white';
-            showButton.style.border = 'none';
-            showButton.style.borderRadius = '5px';
+        // Создаем кнопку для показа скрытого содержимого
+        const showButton = document.createElement('button');
+        showButton.textContent = 'Показать содержимое';
+        showButton.style.cursor = 'pointer';
+        showButton.classList.add("btnhid");
+        showButton.style.margin = '10px';
+        showButton.style.padding = '10px';
+        showButton.style.backgroundColor = '#3498db';
+        showButton.style.color = 'white';
+        showButton.style.border = 'none';
+        showButton.style.borderRadius = '5px';
 
-            // Добавляем обработчик на кнопку для показа содержимого
-            showButton.addEventListener('click', function() {
-                element.innerHTML = originalContent; // Восстанавливаем содержимое
-            });
+        // Скрываем текущее содержимое и заменяем его кнопкой
+        element.dataset.base = originalContent;
+        element.innerHTML = ''; // Очищаем элемент
+        element.appendChild(showButton); // Добавляем кнопку вместо содержимого
+    });
 
-            // Скрываем текущее содержимое и заменяем его кнопкой
-            element.innerHTML = ''; // Очищаем элемент
-            element.appendChild(showButton); // Добавляем кнопку вместо содержимого
+    // Добавляем обработчики для всех кнопок
+    const ltrElements2 = document.querySelectorAll('.btnhid');
+    ltrElements2.forEach((element) => {
+        element.addEventListener('click', function() {
+            element.parentNode.innerHTML = element.parentNode.dataset.base; // Восстанавливаем содержимое
         });
-        });
+    });
+});
+
 </script><script id="sbit"> document.getElementById("backButton").addEventListener("click", function() {
             // Возвращаем пользователя на главную страницу
             // Замените 'index.html' на нужный URL вашей главной страницы

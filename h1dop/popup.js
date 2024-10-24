@@ -125,3 +125,18 @@ document.getElementById('addSplashScreen').addEventListener('click', function() 
         chrome.tabs.sendMessage(tabs[0].id, { action: "addSplashScreen" });
     });
 });
+const increasePaddingButton = document.getElementById('increasePaddingButton');
+
+// Обработчик для увеличения padding слева и справа на 20px
+increasePaddingButton.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "increasePadding" });
+    });
+});
+
+const addcolumn = document.getElementById('addcolumn'); // Новая кнопка
+addcolumn.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "addcolumn" });
+    });
+});

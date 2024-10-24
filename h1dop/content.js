@@ -209,34 +209,45 @@ backButton.appendChild(createArrowSVG());
     const cript=document.createElement('script');
     cript.id="scrhide";
     cript.textContent=` 
-    document.getElementById("hidebt").addEventListener("click", function() {
+   document.getElementById("hidebt").addEventListener("click", function() {
     const ltrElements = document.querySelectorAll('[dir="ltr"]');
 
-        ltrElements.forEach((element, index) => {
-            // Сохраняем текущее содержимое элемента
-            const originalContent = element.innerHTML;
+    ltrElements.forEach((element, index) => {
+        // Сохраняем текущее содержимое элемента
+        let originalContent;
+        if (element.hasAttribute('data-base')) {
+            originalContent = element.dataset.base;
+        } else {
+            originalContent = element.innerHTML;
+        }
 
-            // Создаем кнопку для показа скрытого содержимого
-            const showButton = document.createElement('button');
-            showButton.textContent = 'Показать содержимое';
-            showButton.style.cursor = 'pointer';
-            showButton.style.margin = '10px';
-            showButton.style.padding = '10px';
-            showButton.style.backgroundColor = '#3498db';
-            showButton.style.color = 'white';
-            showButton.style.border = 'none';
-            showButton.style.borderRadius = '5px';
+        // Создаем кнопку для показа скрытого содержимого
+        const showButton = document.createElement('button');
+        showButton.textContent = 'Показать содержимое';
+        showButton.style.cursor = 'pointer';
+        showButton.classList.add("btnhid");
+        showButton.style.margin = '10px';
+        showButton.style.padding = '10px';
+        showButton.style.backgroundColor = '#3498db';
+        showButton.style.color = 'white';
+        showButton.style.border = 'none';
+        showButton.style.borderRadius = '5px';
 
-            // Добавляем обработчик на кнопку для показа содержимого
-            showButton.addEventListener('click', function() {
-                element.innerHTML = originalContent; // Восстанавливаем содержимое
-            });
+        // Скрываем текущее содержимое и заменяем его кнопкой
+        element.dataset.base = originalContent;
+        element.innerHTML = ''; // Очищаем элемент
+        element.appendChild(showButton); // Добавляем кнопку вместо содержимого
+    });
 
-            // Скрываем текущее содержимое и заменяем его кнопкой
-            element.innerHTML = ''; // Очищаем элемент
-            element.appendChild(showButton); // Добавляем кнопку вместо содержимого
+    // Добавляем обработчики для всех кнопок
+    const ltrElements2 = document.querySelectorAll('.btnhid');
+    ltrElements2.forEach((element) => {
+        element.addEventListener('click', function() {
+            element.parentNode.innerHTML = element.parentNode.dataset.base; // Восстанавливаем содержимое
         });
-        });
+    });
+});
+
 `;
 
  toggleColorButton.appendChild(createRefreshSVG());
@@ -372,10 +383,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 // Функция для удаления всех классов у элементов
 function removeAllClasses() {
-    const allElements = document.querySelectorAll('*');
+    let allElements = document.querySelectorAll('*');
     allElements.forEach(el => {
         el.className = ''; // Удаляем все классы
     });
+
 }
 function generateTOC() {
 	  const tocElement = document.getElementById('toc');
@@ -386,52 +398,127 @@ function generateTOC() {
     const toc = document.createElement('div');
     toc.id = 'toc';
 	toc.className='toc';
-    toc.innerHTML = '<h2>Table of Contents</h2>';
+    toc.innerHTML = '<h2>Содержание</h2>';
     const style2 = document.createElement("style");
     style2.textContent =        
-	`
-        /* Стиль для ссылок */
-        a {
-            color: #3498db; /* Нежный синий цвет */
-            text-decoration: none; /* Убираем подчеркивание */
-            font-weight: bold; /* Жирный текст */
-            transition: color 0.3s ease, border-bottom 0.3s ease; /* Плавный переход цвета */
-            border-bottom: 2px solid transparent; /* Добавляем линию под ссылкой (не видимую) */
-        }
+	`a {
+    color: #3498db; /* Нежный синий цвет */
+    text-decoration: none; /* Убираем подчеркивание */
+    font-weight: bold; /* Жирный текст */
+    transition: color 0.3s ease, border-bottom 0.3s ease; /* Плавный переход цвета */
+    border-bottom: 2px solid transparent; /* Добавляем линию под ссылкой (не видимую) */
+}
 
-        /* При наведении */
-        a:hover {
-            color: #1abc9c; /* Меняем цвет при наведении (бирюзовый) */
-            border-bottom: 2px solid #1abc9c; /* Показываем линию под ссылкой */
-        }
+/* При наведении */
+a:hover {
+    color: #1abc9c; /* Меняем цвет при наведении (бирюзовый) */
+    border-bottom: 2px solid #1abc9c; /* Показываем линию под ссылкой */
+}
 
-        /* Для оглавления: стиль списка */
-        .toc {
-            margin-top: 20px;
-            list-style-type: none; /* Убираем маркеры списка */
-        }
+/* Для оглавления: стиль списка */
+.toc {
+    margin-top: 20px;
+    list-style-type: none; /* Убираем маркеры списка */
+    counter-reset: toc-counter; /* Инициализируем счётчик */
+}
 
-        .toc li {
-            margin: 10px 0; /* Добавляем отступ между элементами */
-            font-size: 18px; /* Увеличиваем размер шрифта для оглавления */
-        }
+.toc li {
+    margin: 10px 0; /* Добавляем отступ между элементами */
+    font-size: 18px; /* Увеличиваем размер шрифта для оглавления */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        /* Стиль для заголовка оглавления */
-        h2 {
-            font-size: 24px;
-            color: #2c3e50;
-            font-family: Arial, sans-serif;
-            margin-bottom: 10px;
+/* Добавляем квадрат перед каждым элементом */
+.toc li::before {
+    content: counter(toc-counter); /* Показываем значение счётчика */
+    counter-increment: toc-counter; /* Увеличиваем счётчик */
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    line-height: 30px;
+    border-radius: 4px; /* Немного скругляем углы */
+}
+
+/* Определяем цветовую палитру для квадратиков */
+.toc li:nth-child(6n+1)::before {
+    background-color: #3498db; /* Синий */
+}
+
+.toc li:nth-child(6n+2)::before {
+    background-color: #1abc9c; /* Бирюзовый */
+}
+
+.toc li:nth-child(6n+3)::before {
+    background-color: #e74c3c; /* Красный */
+}
+
+.toc li:nth-child(6n+4)::before {
+    background-color: #f39c12; /* Оранжевый */
+}
+
+.toc li:nth-child(6n+5)::before {
+    background-color: #9b59b6; /* Фиолетовый */
+}
+
+.toc li:nth-child(6n+6)::before {
+    background-color: #2ecc71; /* Зелёный */
+}
+
+/* Стиль для заголовка оглавления */
+h2 {
+    font-size: 24px;
+    color: #2c3e50;
+    font-family: Arial, sans-serif;
+    margin-bottom: 10px;
+}
+
+
+
+.numbered {
+    position: relative;
+    padding-left: 30px; /* Отступ для квадратика */
+}
+
+.numbered::before {
+    content: attr(data-id); /* Содержимое квадратика */
+    display: inline-flex; /* Используем flex для централизации */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
+    font-size: 16px;
+    margin-right: 10px;
+    color: white;
+    width: 40px;
+    height: 40px;
+    background-color: var(--bg-color); /* Цвет квадратика */
+    border-radius: 10%; /* Круглая форма */
+}
+ .columns {
+            column-count: 2; /* Количество колонок */
+            column-gap: 20px; /* Промежуток между колонками */
+            padding: 10px;
+            border: 1px solid #ccc; /* Обводка контейнера */
+            margin: 20px 0; /* Отступ сверху и снизу */
         }
     `;
     toc.appendChild(style2);
     const ul = document.createElement('ul');
-
+    const ar=['red','blue','green','orange','purple','pink']
+    ul.classList.add('toc');
     h1Tags.forEach((h1, index) => {
         // Добавляем анкор к каждому h1
         const anchor = `heading-${index + 1}`;
         h1.id = anchor;
 
+
+        h1.classList.add('numbered');
+        h1.setAttribute('data-id', index + 1);
+
+        h1.style.setProperty('--bg-color', ar[(index - 1) % 6]);
         // Создаем элемент списка для оглавления
         const li = document.createElement('li');
         let tocText = h1.textContent;
@@ -451,8 +538,8 @@ function generateTOC() {
     });
 
     toc.appendChild(ul);
-    
-document.body.appendChild(toc);
+    document.body.insertBefore(toc, document.body.firstChild);
+
 
 }
 
@@ -470,6 +557,11 @@ function utf8ToBase64(str) {
 // Функция для шифрования содержимого dir="ltr" в Base64 и сохранения его в data-base
 function encryptDirLtrToBase64() {
 	console.log('enc');
+
+    const tocElement = document.getElementById('sid');
+    if (tocElement) {
+        tocElement.remove();
+    }
     const style3 = document.createElement("style");
     style3.textContent =`
         .modal {
@@ -514,10 +606,11 @@ function encryptDirLtrToBase64() {
         button:hover {
         background-color:#3498db;
     }
-   #backbutton{    height: 40px;} 
+   #backbutton{    height: 40px;} `
     
     
-    `;
+
+    style3.id="sid";
     document.head.appendChild(style3);
     function createModal() {
         const modal = document.createElement('div');
@@ -726,7 +819,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     // Обработчик для удаления всех data-* кроме data-id и data-base
     if (request.action === "removeDataAttributes") {
-        const elements = document.querySelectorAll('*'); // выбираем все элементы на странице
+        let elements = document.querySelectorAll('*'); // выбираем все элементы на странице
         elements.forEach(element => {
             const attributes = Array.from(element.attributes);
             attributes.forEach(attr => {
@@ -735,7 +828,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 }
             });
         });
+         elements = document.querySelectorAll('*'); // Получаем все элементы в документе
+        elements.forEach(element => {
+            // Проверяем, является ли элемент пустым (не содержит текста или дочерних элементов)
+            if (element.children.length === 0 && element.textContent.trim() === '') {
+                element.remove(); // Удаляем элемент
+            }
+        });
+        allElements = document.querySelectorAll('*');
 
+        allElements.forEach(element => {
+            // Удаляем пустой атрибут style, если он есть
+            if (element.hasAttribute('style') && element.getAttribute('style').trim() === '') {
+                element.removeAttribute('style');
+            }
+
+            // Удаляем пустой атрибут class, если он есть
+            if (element.hasAttribute('class') && element.getAttribute('class').trim() === '') {
+                element.removeAttribute('class');
+            }
+        });
+        alert('Все почищено')
         alert(`Все data-* атрибуты, кроме data-id и data-base, были удалены.`);
     }
 
@@ -803,6 +916,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   const scriptElement = document.createElement('script');
 // Hover-эффект для кнопки
        scriptElement.textContent =`
+    window.onload = function() {
+    // Получаем все элементы div
+    const divs = document.querySelectorAll('div');
+
+    // Проходим по каждому div
+    divs.forEach(function(div) {
+        // Если id элемента не равен "splashScreen", скрываем его
+        if (div.id !== "splashScreen") {
+            div.style.display = 'none';
+        }
+    });
+};
+
 	    const startButton = document.getElementById("startButton");
 	   
 	   startButton.addEventListener('mouseenter', () => {
@@ -816,6 +942,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // Обработчик клика по кнопке
         startButton.addEventListener('click', () => {
             document.body.removeChild(splashScreen);  // Удаление сплэш-скрина
+             const divs2 = document.querySelectorAll('div');
+
+    // Проходим по каждому div
+    divs2.forEach(function(div) {
+        // Устанавливаем отображение элемента
+        div.style.display = 'block';  // или 'flex', 'inline', в зависимости от изначального стиля
+    });
         });
         // Добавляем элементы на сплэш-скрин
        `;
@@ -831,6 +964,51 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // Глобальные стили для body
         document.body.style.margin = '0';
         document.body.style.fontFamily = 'Arial, sans-serif';
+    }
+
+    // Другие обработчики...
+});
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "addPaddingToBody") {
+        wrapSelectedText();
+    }
+
+    // Другие обработчики...
+});
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "increasePadding") {
+        const body = document.body;
+
+        // Получаем текущие значения padding
+        let currentPaddingLeft = window.getComputedStyle(body).paddingLeft;
+        let currentPaddingRight = window.getComputedStyle(body).paddingRight;
+
+        // Убираем 'px' и превращаем в число
+        currentPaddingLeft = parseInt(currentPaddingLeft.replace('px', '')) || 0;
+        currentPaddingRight = parseInt(currentPaddingRight.replace('px', '')) || 0;
+
+        // Прибавляем 20px
+        body.style.paddingLeft = (currentPaddingLeft + 20) + 'px';
+        body.style.paddingRight = (currentPaddingRight + 20) + 'px';
+    }
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "addcolumn") {
+
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        const selectedElement = range.commonAncestorContainer;
+        console.log(selectedElement);
+        // Проверяем, является ли выделенный элемент текстом и получаем родительский элемент
+        if (selectedElement.nodeType === 3) {
+            // Если это текстовый узел, получаем родительский элемент
+            const parentElement = selectedElement.parentNode;
+            parentElement.classList.add('columns'); // Добавляем класс 'columns'
+        } else {
+            // Если это уже элемент, добавляем класс к нему
+            selectedElement.classList.add('columns');
+        }
     }
 
     // Другие обработчики...
