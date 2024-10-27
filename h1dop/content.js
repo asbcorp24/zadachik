@@ -305,9 +305,9 @@ divs.forEach(function(div) {
             }
         });`;
     document.body.appendChild(script);
-    const metaTag = document.createElement('meta');
-    metaTag.setAttribute('http-equiv', 'Content-Security-Policy');
-    metaTag.setAttribute('content', "script-src 'self' 'nonce-abc124';");
+   // const metaTag = document.createElement('meta');
+   // metaTag.setAttribute('http-equiv', 'Content-Security-Policy');
+  //  metaTag.setAttribute('content', "script-src 'self' 'nonce-abc124';");
 
 // Добавление мета-тега в head документа
   //  document.head.appendChild(metaTag);
@@ -402,108 +402,171 @@ function generateTOC() {
     const style2 = document.createElement("style");
     style2.textContent =        
 	`a {
-    color: #3498db; /* Нежный синий цвет */
-    text-decoration: none; /* Убираем подчеркивание */
-    font-weight: bold; /* Жирный текст */
-    transition: color 0.3s ease, border-bottom 0.3s ease; /* Плавный переход цвета */
-    border-bottom: 2px solid transparent; /* Добавляем линию под ссылкой (не видимую) */
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+    border-bottom: 2px solid transparent;
 }
 
-/* При наведении */
 a:hover {
-    color: #1abc9c; /* Меняем цвет при наведении (бирюзовый) */
-    border-bottom: 2px solid #1abc9c; /* Показываем линию под ссылкой */
+    color: #1abc9c;
+    border-bottom: 2px solid #1abc9c;
 }
 
-/* Для оглавления: стиль списка */
+/* Оглавление */
 .toc {
     margin-top: 20px;
-    list-style-type: none; /* Убираем маркеры списка */
-    counter-reset: toc-counter; /* Инициализируем счётчик */
+    list-style-type: none;
+    counter-reset: toc-counter;
+    padding-left: 1em;
 }
 
 .toc li {
-    margin: 10px 0; /* Добавляем отступ между элементами */
-    font-size: 18px; /* Увеличиваем размер шрифта для оглавления */
+    margin: 10px 0;
+    font-size: 1em;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.5em;
 }
 
-/* Добавляем квадрат перед каждым элементом */
+/* Нумерация с квадратиками */
 .toc li::before {
-    content: counter(toc-counter); /* Показываем значение счётчика */
-    counter-increment: toc-counter; /* Увеличиваем счётчик */
-    display: inline-block;
-    width: 30px;
-    height: 30px;
+    content: counter(toc-counter);
+    counter-increment: toc-counter;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 2em;
+    height: 2em;
     color: white;
-    font-size: 16px;
-    text-align: center;
-    line-height: 30px;
-    border-radius: 4px; /* Немного скругляем углы */
+    font-size: 0.9em;
+    border-radius: 4px;
 }
 
-/* Определяем цветовую палитру для квадратиков */
-.toc li:nth-child(6n+1)::before {
-    background-color: #3498db; /* Синий */
-}
+/* Цвета для квадратиков */
+.toc li:nth-child(6n+1)::before { background-color: #3498db; }
+.toc li:nth-child(6n+2)::before { background-color: #1abc9c; }
+.toc li:nth-child(6n+3)::before { background-color: #e74c3c; }
+.toc li:nth-child(6n+4)::before { background-color: #f39c12; }
+.toc li:nth-child(6n+5)::before { background-color: #9b59b6; }
+.toc li:nth-child(6n+6)::before { background-color: #2ecc71; }
 
-.toc li:nth-child(6n+2)::before {
-    background-color: #1abc9c; /* Бирюзовый */
-}
-
-.toc li:nth-child(6n+3)::before {
-    background-color: #e74c3c; /* Красный */
-}
-
-.toc li:nth-child(6n+4)::before {
-    background-color: #f39c12; /* Оранжевый */
-}
-
-.toc li:nth-child(6n+5)::before {
-    background-color: #9b59b6; /* Фиолетовый */
-}
-
-.toc li:nth-child(6n+6)::before {
-    background-color: #2ecc71; /* Зелёный */
-}
-
-/* Стиль для заголовка оглавления */
+/* Заголовок оглавления */
 h2 {
-    font-size: 24px;
+    font-size: 1.5em;
     color: #2c3e50;
     font-family: Arial, sans-serif;
-    margin-bottom: 10px;
+    margin-bottom: 0.5em;
 }
 
-
-
+/* Стили для класса numbered */
 .numbered {
     position: relative;
-    padding-left: 30px; /* Отступ для квадратика */
+    padding-left: 1.5em;
 }
 
 .numbered::before {
-    content: attr(data-id); /* Содержимое квадратика */
-    display: inline-flex; /* Используем flex для централизации */
-    justify-content: center; /* Центрируем по горизонтали */
-    align-items: center; /* Центрируем по вертикали */
-    font-size: 16px;
-    margin-right: 10px;
+    content: attr(data-id);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 2.5em;
+    height: 2.5em;
+    font-size: 1em;
+    margin-right: 0.5em;
     color: white;
-    width: 40px;
-    height: 40px;
-    background-color: var(--bg-color); /* Цвет квадратика */
-    border-radius: 10%; /* Круглая форма */
+    background-color: var(--bg-color);
+    border-radius: 10%;
 }
- .columns {
-            column-count: 2; /* Количество колонок */
-            column-gap: 20px; /* Промежуток между колонками */
-            padding: 10px;
-            border: 1px solid #ccc; /* Обводка контейнера */
-            margin: 20px 0; /* Отступ сверху и снизу */
-        }
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+    .toc li {
+        font-size: 1em;
+    }
+    .toc li::before, .numbered::before {
+        width: 2em;
+        height: 2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .toc li {
+        font-size: 0.9em;
+    }
+    .toc li::before, .numbered::before {
+        width: 1.8em;
+        height: 1.8em;
+        font-size: 0.8em;
+    }
+}4
+pre {
+    white-space: pre-wrap; /* Разрешить перенос текста */
+    word-wrap: break-word; /* Переносить длинные слова */
+    font-size: 16px; /* Базовый размер шрифта */
+    padding: 10px;
+    border: 1px solid #ccc;
+   
+    overflow-x: auto; /* Добавить горизонтальную прокрутку при необходимости */
+}
+
+/* Меньший размер шрифта на маленьких экранах */
+@media (max-width: 768px) {
+    pre {
+        font-size: 14px;
+        padding: 8px;
+    }
+}
+
+/* Ещё меньший размер на очень маленьких экранах */
+@media (max-width: 480px) {
+    pre {
+        font-size: 12px;
+        padding: 6px;
+    }
+}
+.columns {
+    column-count: 1; /* Базовое значение для мобильных */
+    column-gap: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+/* Для экранов шире 600px (планшеты) */
+@media (min-width: 600px) {
+    .columns {
+        column-count: 2; /* Две колонки на планшетах */
+    }
+}
+
+/* Для экранов шире 1024px (настольные компьютеры) */
+@media (min-width: 1024px) {
+    .columns {
+        column-count: 3; /* Три колонки на больших экранах */
+    }
+} 
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    padding-left: 5vw; /* Процент ширины окна */
+    padding-right: 5vw;
+}
+
+@media (min-width: 768px) { /* Планшеты и выше */
+    body {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+}
+
+@media (min-width: 1024px) { /* Десктопы и выше */
+    body {
+        padding-left: 60px;
+        padding-right: 60px;
+    }
+}
     `;
     toc.appendChild(style2);
     const ul = document.createElement('ul');
@@ -666,9 +729,9 @@ function encryptDirLtrToBase64() {
 		el.innerHTML = `<button class="decryptButton" data-index="${index}">Прочитать</button>`; // Замена содержимого на кнопку
 
     });
-    const metaTag = document.createElement('meta');
-    metaTag.setAttribute('http-equiv', 'Content-Security-Policy');
-    metaTag.setAttribute('content', "script-src 'self' 'nonce-abc123';");
+   // const metaTag = document.createElement('meta');
+   // metaTag.setAttribute('http-equiv', 'Content-Security-Policy');
+   // metaTag.setAttribute('content', "script-src 'self' 'nonce-abc123';");
 
 // Добавление мета-тега в head документа
   //  document.head.appendChild(metaTag);
@@ -769,7 +832,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // Получаем все заголовки <h1>
         const headings = Array.from(document.querySelectorAll('h1'));
 
-
+        const vie = document.createElement('meta');
+        charSet.name = "viewport";
+        charSet.content = "width=device-width, initial-scale=1.0, minimum-scale=1.0"; // Замените на ваш текст копирайта
+        document.head.appendChild(charSet);
 
             const charSet = document.createElement('meta');
             charSet.name = "charSet";
@@ -941,7 +1007,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
         // Обработчик клика по кнопке
         startButton.addEventListener('click', () => {
-            document.body.removeChild(splashScreen);  // Удаление сплэш-скрина
+              
              const divs2 = document.querySelectorAll('div');
 
     // Проходим по каждому div
@@ -949,6 +1015,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // Устанавливаем отображение элемента
         div.style.display = 'block';  // или 'flex', 'inline', в зависимости от изначального стиля
     });
+     const splashScreen = document.getElementById("splashScreen");
+   splashScreen.style.display = 'none';
         });
         // Добавляем элементы на сплэш-скрин
        `;
@@ -1011,5 +1079,275 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         }
     }
 
+    // Другие обработчики...
+});
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "addcopy") {
+
+
+        allElements = document.querySelectorAll('.copy-button');
+
+        allElements.forEach(element => {
+            element.remove();
+            });
+        let elementhd = document.getElementById("scrcpu");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+         elementhd = document.getElementById("stid");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+        const cript = document.createElement('script');
+        const st=document.createElement('style');
+        st.id='stid';
+        st.textContent=`.copy-button {
+                    position: absolute; /* Позиционирование кнопки */
+                    top: 5px; /* Расстояние от верхнего края */
+                    right: 5px; /* Расстояние от правого края */
+                    padding: 3px 5px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    border: 1px solid #3498db;
+                    background-color: #3498db;
+                    color: white;
+                    border-radius: 4px;
+                    transition: background-color 0.3s ease;
+                }
+
+                /* Эффект наведения для кнопки */
+                .copy-button:hover {
+                    background-color: #2980b9;
+                }
+
+                /* Убедитесь, что элементы с dir="ltr" имеют относительное позиционирование */
+                [dir="ltr"] {
+                    position: relative; /* Устанавливаем позиционирование для контейнера */
+                    padding: 10px; /* Отступ для элемента */
+                    border: 1px solid #ccc; /* Обводка контейнера */
+                    margin: 10px 0; /* Отступ между элементами */
+                }
+             `
+        document.body.appendChild(st);
+        cript.id = "scrcpu";
+        cript.textContent = ` document.addEventListener('DOMContentLoaded', () => {
+            // Функция для копирования текста в буфер обмена
+            function copyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Содержимое скопировано в буфер обмена!');
+            }
+
+            // Создание и добавление стилей для кнопки
+              allElements = document.querySelectorAll('.copy-button');
+
+        allElements.forEach(element => {
+            element.remove();
+            });
+            // Поиск всех элементов с атрибутом dir="ltr"
+            const ltrElements = document.querySelectorAll('[dir="ltr"]');
+
+            ltrElements.forEach(element => {
+                // Создание кнопки "Копировать"
+                const copyButton = document.createElement('button');
+                copyButton.innerText = 'Копировать';
+                copyButton.className = 'copy-button'; // Добавляем класс для стилей
+
+                // Обработчик клика для кнопки
+                copyButton.addEventListener('click', () => {
+                    copyToClipboard(element.innerText);
+                });
+
+                // Добавление кнопки к элементу
+                element.appendChild(copyButton);
+            });
+        }); `;
+        document.body.appendChild(cript);
+
+        console.log('добавлен скрипт');
+    }
+    // Другие обработчики...
+});
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "addpr") {
+
+        let elementhd = document.getElementById("scrollPercentage");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+          elementhd = document.getElementById("scrpr");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+
+        const cript = document.createElement('script');
+
+        cript.id = "scrpr";
+        cript.textContent = ` 
+          
+           let elementhd = document.getElementById("scrollPercentage");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+          
+          const scrollPercentage = document.createElement('div');
+    scrollPercentage.id = 'scrollPercentage';
+    
+    // Добавляем стиль к элементу через JavaScript
+    Object.assign(scrollPercentage.style, {
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        fontSize: '18px',
+        zIndex: '1000' // Убедитесь, что элемент всегда сверху
+    });
+ let elementhd22= document.getElementById("scrollPercentage");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd22) {
+            elementhd22.remove();
+        }
+    // Добавляем элемент в body
+    document.body.appendChild(scrollPercentage);
+
+    // Обработчик события прокрутки
+    document.addEventListener('scroll', () => {
+        // Высота документа
+        const documentHeight = document.documentElement.scrollHeight;
+
+        // Высота видимой области
+        const windowHeight = window.innerHeight;
+
+        // Текущая позиция прокрутки
+        const scrollTop = window.scrollY;
+
+        // Рассчитываем процент просмотренной части страницы
+        const totalScroll = scrollTop + windowHeight;
+        const percentage = Math.round((totalScroll / documentHeight) * 100);
+
+        // Обновляем текст на экране
+        scrollPercentage.textContent = percentage + '%';
+    });`;
+        document.body.appendChild(cript);
+
+        console.log('добавлен скрипт');
+    }
+    // Другие обработчики...
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "print") {
+
+
+        elementhd = document.getElementById("printscript");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+        elementhd = document.getElementById("pstyle");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (elementhd) {
+            elementhd.remove();
+        }
+const pstyle=document.createElement('style');
+        pstyle.id="pstyle";
+        pstyle.textContent=`
+        @media print {
+    /* Стили для печати */
+    #bcon,
+    #scrollPercentage,
+    .copy-button {
+        display: none; /* Скрыть элементы, которые не нужны при печати */
+    }
+
+    .page-break {
+        page-break-before: always; /* Новая страница для каждого анчора */
+    }
+}
+[dir="ltr"] {
+    page-break-inside: avoid; /* Избегать разрывов внутри элемента */
+}`;
+        document.head.appendChild(pstyle);
+        const cript = document.createElement('script');
+
+        cript.id = "printscript";
+        cript.textContent = ` function getPageNumber(anchorId) {
+    const anchorElement = document.getElementById(anchorId);
+    
+    if (!anchorElement) return null;
+
+    const elementPosition = anchorElement.getBoundingClientRect().top + window.scrollY;
+    const pageHeight = window.innerHeight;
+
+    return Math.ceil(elementPosition / pageHeight);
+}
+
+function prepareDocumentForPrint() {
+    const tocLinks = document.querySelectorAll('#toc a'); // Все гиперссылки в оглавлении
+    const btcon = document.getElementById('bcon');
+    btcon.style.display = "none";
+    
+    const scrollPercentage = document.getElementById('scrollPercentage');
+    scrollPercentage.style.display = "none";
+
+    const copyn = document.querySelectorAll('.copy-button'); // Изменено на querySelectorAll
+    copyn.forEach((element) => {
+        element.style.display = "none"; // Скрываем каждую кнопку копирования
+    });
+
+    tocLinks.forEach(link => {
+        const anchorId = link.getAttribute('href').substring(1); // Получаем ID якоря без '#'
+        const pageNumber = getPageNumber(anchorId);
+        
+        // Создаем новый элемент для номера страницы
+        const pageNumberElement = document.createElement('span');
+        pageNumberElement.textContent = pageNumber;
+        pageNumberElement.style.marginLeft = 'auto'; // Устанавливаем отступ слева для выравнивания
+
+        // Создаем flex-контейнер
+        const linkContainer = document.createElement('div');
+        linkContainer.style.display = 'flex';
+        linkContainer.style.justifyContent = 'space-between'; // Разделяем текст и номер страницы
+        linkContainer.style.width = '100%'; // Задаем ширину для контейнера
+
+        // Перемещаем ссылку в новый контейнер
+        linkContainer.appendChild(link.cloneNode(true)); // Клонируем ссылку, чтобы избежать HierarchyRequestError
+        linkContainer.appendChild(pageNumberElement);
+
+        // Заменяем старую ссылку на новый контейнер
+        link.parentNode.replaceChild(linkContainer, link);
+    });
+
+    // Удаление класса 'columns' у каждого элемента
+    const tocElements = document.querySelectorAll('.toc');
+    tocElements.forEach(element => {
+        element.classList.remove('columns');
+    });
+}
+window.addEventListener('beforeprint', prepareDocumentForPrint);`;
+        document.body.appendChild(cript);
+
+        console.log('добавлен скрипт');
+    }
     // Другие обработчики...
 });

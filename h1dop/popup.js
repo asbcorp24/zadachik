@@ -140,3 +140,22 @@ addcolumn.addEventListener('click', function() {
         chrome.tabs.sendMessage(tabs[0].id, { action: "addcolumn" });
     });
 });
+const addcolumn3 = document.getElementById('addcopy'); // Новая кнопка
+addcolumn3.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "addcopy" });
+    });
+});
+const addcolumn4 = document.getElementById('addpr'); // Новая кнопка
+addcolumn4.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "addpr" });
+    });
+});
+
+const addcolumn5 = document.getElementById('print'); // Новая кнопка
+addcolumn5.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "print" });
+    });
+});
