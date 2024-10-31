@@ -625,6 +625,11 @@ function encryptDirLtrToBase64() {
     if (tocElement) {
         tocElement.remove();
     }
+    const tocE  = document.getElementById('hidebt');
+    if (tocE) {
+        tocE.remove();
+    }
+
     const style3 = document.createElement("style");
     style3.textContent =`
         .modal {
@@ -978,11 +983,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         startButton.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
         startButton.style.transition = 'background-color 0.3s ease';
 
-        
+        const eleme  = document.getElementById("splashScreenscript");
+
+// Проверяем, что элемент найден, и удаляем его
+        if (eleme ) {
+            eleme .remove();
+        }
   const scriptElement = document.createElement('script');
 // Hover-эффект для кнопки
+        scriptElement.id="splashScreenscript";
        scriptElement.textContent =`
     window.onload = function() {
+     const splashScreen = document.getElementById("splashScreen");
+   splashScreen.style.display = 'flex';
     // Получаем все элементы div
     const divs = document.querySelectorAll('div');
 
@@ -1196,13 +1209,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
         cript.id = "scrpr";
         cript.textContent = ` 
+          document.querySelectorAll('#scrollPercentage').forEach(el => el.remove());
           
-           let elementhd = document.getElementById("scrollPercentage");
-
-// Проверяем, что элемент найден, и удаляем его
-        if (elementhd) {
-            elementhd.remove();
-        }
           
           const scrollPercentage = document.createElement('div');
     scrollPercentage.id = 'scrollPercentage';

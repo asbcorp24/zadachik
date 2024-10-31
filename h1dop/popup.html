@@ -23,9 +23,65 @@
         button:hover {
             background-color: #1abc9c;
         }
+
+    </style>
+    <style>
+        /* Стиль для кнопки */
+        #addContentBtn {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Модальное окно */
+        #modal {
+            display: none; /* По умолчанию скрыто */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Контейнер модального окна */
+        #modalContent {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        /* Кнопка закрытия модального окна */
+        #closeModalBtn {
+            float: right;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Стиль для textarea */
+        #codeTextarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
+<div id="modal">
+    <div id="modalContent">
+        <span id="closeModalBtn">&times;</span>
+        <h3>Введите код</h3>
+        <textarea id="codeTextarea" placeholder="Вставьте код сюда..."></textarea>
+        <button id="insertCodeBtn">Добавить в документ</button>
+    </div>
+</div>
 <button id="wrapButton">Оборачивать в <h1></button>
 <button id="deleteButton">Удалить выделенный текст</button>
 <button id="addStylesButton">Добавить стили и кнопки</button>
@@ -46,6 +102,7 @@
 <button id="addcopy">Добавить кнопку копия</button>
 <button id="addpr">Добавить процент просмотра</button>
 <button id="print">Создать подготовку к печати</button>
+<button id="addContentBtn">Добавить теоретическую часть</button>
 <script src="popup.js"></script>
 </body>
 </html>

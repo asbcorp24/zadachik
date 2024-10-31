@@ -159,3 +159,50 @@ addcolumn5.addEventListener('click', function() {
         chrome.tabs.sendMessage(tabs[0].id, { action: "print" });
     });
 });
+
+const addContentBtn = document.getElementById('addContentBtn');
+const modal = document.getElementById('modal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const insertCodeBtn = document.getElementById('insertCodeBtn');
+const codeTextarea = document.getElementById('codeTextarea');
+
+// Открыть модальное окно при нажатии на кнопку
+addContentBtn.onclick = function () {
+    console.log('inmod');
+    modal.style.display = 'block';
+};
+
+// Закрыть модальное окно при нажатии на крестик
+closeModalBtn.onclick = function () {
+    modal.style.display = 'none';
+};
+
+// Функция добавления содержимого из textarea в <details>
+insertCodeBtn.onclick = function () {
+    const codeContent = codeTextarea.value;
+    if (codeContent.trim()) {
+        // Создаем <details> с текстом из textarea
+        const detailsElement = document.createElement('details');
+        const summaryElement = document.createElement('summary');
+        summaryElement.textContent = 'Новая теоретическая часть';
+        detailsElement.appendChild(summaryElement);
+
+        const codeParagraph = document.createElement('pre');
+        codeParagraph.textContent = codeContent;
+        detailsElement.appendChild(codeParagraph);
+
+        // Добавляем элемент на страницу (например, в конец body)
+        document.body.appendChild(detailsElement);
+
+        // Закрыть модальное окно и очистить поле
+        modal.style.display = 'none';
+        codeTextarea.value = '';
+    }
+};
+
+// Закрыть модальное окно при нажатии вне его
+window.onclick = function (event) {
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+};
