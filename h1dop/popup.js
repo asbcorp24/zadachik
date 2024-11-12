@@ -160,49 +160,87 @@ addcolumn5.addEventListener('click', function() {
     });
 });
 
+const clearpage = document.getElementById('clearpage'); // Новая кнопка
+clearpage.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "clearpage" });
+    });
+});
+
 const addContentBtn = document.getElementById('addContentBtn');
+addContentBtn.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "addContentBtn" });
+    });
+});
+const addContentBtn2 = document.getElementById('addContentBtn2');
+addContentBtn2.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "addContentBtn2" });
+    });
+});
+
+
 const modal = document.getElementById('modal');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const insertCodeBtn = document.getElementById('insertCodeBtn');
 const codeTextarea = document.getElementById('codeTextarea');
 
-// Открыть модальное окно при нажатии на кнопку
-addContentBtn.onclick = function () {
-    console.log('inmod');
-    modal.style.display = 'block';
-};
 
-// Закрыть модальное окно при нажатии на крестик
-closeModalBtn.onclick = function () {
-    modal.style.display = 'none';
-};
 
-// Функция добавления содержимого из textarea в <details>
-insertCodeBtn.onclick = function () {
-    const codeContent = codeTextarea.value;
-    if (codeContent.trim()) {
-        // Создаем <details> с текстом из textarea
-        const detailsElement = document.createElement('details');
-        const summaryElement = document.createElement('summary');
-        summaryElement.textContent = 'Новая теоретическая часть';
-        detailsElement.appendChild(summaryElement);
+///////////////////////////
 
-        const codeParagraph = document.createElement('pre');
-        codeParagraph.textContent = codeContent;
-        detailsElement.appendChild(codeParagraph);
+document.getElementById("saveHTML").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.scripting.executeScript(
+            {
+                target: { tabId: tabs[0].id },
+                func: () => window.getSelection().toString(),
+            },
+            (selection) => {
+                const htmlContent = selection[0].result;
+                chrome.storage.local.set({ savedHTML: htmlContent }, () => {
+                 //   document.getElementById("htmlContent").value = htmlContent;
+                    alert("Добавлено успешно")
+                });
+            }
+        );
+    });
+});
 
-        // Добавляем элемент на страницу (например, в конец body)
-        document.body.appendChild(detailsElement);
-
-        // Закрыть модальное окно и очистить поле
-        modal.style.display = 'none';
-        codeTextarea.value = '';
-    }
-};
-
-// Закрыть модальное окно при нажатии вне его
-window.onclick = function (event) {
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
-};
+// Вставка и очистка сохраненного HTML на странице
+document.getElementById("insertAndClearHTML").addEventListener("click", () => {
+    chrome.storage.local.get("savedHTML", (data) => {
+        const htmlContent = data.savedHTML;
+        if (htmlContent) {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.scripting.executeScript(
+                    {
+                        target: { tabId: tabs[0].id },
+                        func: (htmlContent) => {
+                            document.body.innerHTML = htmlContent;
+                        },
+                        args: [htmlContent],
+                    },
+                    () => {
+                        chrome.storage.local.remove("savedHTML", () => {
+                      //      document.getElementById("htmlContent").value = "";
+                        });
+                    }
+                );
+            });
+        } else {
+            alert("Нет сохраненного HTML для вставки.");
+        }
+    });
+});
+document.getElementById('tocBtn2').addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            files: ['content.js']
+        }, () => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "generateTOC2" });
+        });
+    });
+});

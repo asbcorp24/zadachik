@@ -2,10 +2,7 @@
     "manifest_version": 3,
     "name": "Text Manipulation Extension",
     "version": "1.0",
-    "permissions": [
-        "activeTab",
-        "scripting"
-    ],  "commands": {
+    "permissions":  ["storage", "scripting", "activeTab"],  "commands": {
     "add_padding": {
         "suggested_key": {
             "default": "Alt+P"
@@ -15,7 +12,9 @@
 },
     "action": {
         "default_popup": "popup.html"
-    },
+    },"background": {
+    "service_worker": "background.js"
+},
     "content_scripts": [
         {
             "matches": ["<all_urls>"],

@@ -377,6 +377,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "generateTOC":
             generateTOC();
             break;
+        case "generateTOC2":
+            generateTOC2();
+            break;
+
 
 
     }
@@ -387,6 +391,52 @@ function removeAllClasses() {
     allElements.forEach(el => {
         el.className = ''; // Удаляем все классы
     });
+
+}
+function generateTOC2() {
+    const tocElement = document.getElementById('toc2');
+    if (tocElement) {
+        tocElement.remove();
+    }
+    // Создаём контейнер для оглавления
+    const tocContainer = document.createElement("div");
+    tocContainer.id = "toc2";
+    tocContainer.style.marginBottom = "20px";
+    tocContainer.innerHTML = "<h2>Оглавление теоретической части</h2>";
+
+// Создаём нумерованный список для оглавления
+    const tocList = document.createElement("ol");
+    tocList.classList.add('toc');
+    tocList.classList.add('columns');
+// Находим все элементы <details>
+    const detailsElements = document.querySelectorAll("details");
+
+    detailsElements.forEach((details, index) => {
+        const summary = details.querySelector("summary");
+
+        if (summary) {
+            // Создаём уникальный ID для якорной ссылки
+            const anchorId = `summary-${index + 1}`;
+            summary.id = anchorId;
+
+            // Создаём ссылку в виде элемента списка
+            const tocListItem = document.createElement("li");
+            const tocLink = document.createElement("a");
+            tocLink.href = `#${anchorId}`;
+            tocLink.textContent = summary.textContent.trim();
+
+            // Добавляем ссылку в элемент списка
+            tocListItem.appendChild(tocLink);
+            tocList.appendChild(tocListItem);
+        }
+    });
+
+// Вставляем нумерованный список в контейнер
+    tocContainer.appendChild(tocList);
+
+// Добавляем оглавление в начало документа
+    document.body.insertBefore(tocContainer, document.body.firstChild);
+
 
 }
 function generateTOC() {
@@ -1261,6 +1311,68 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     // Другие обработчики...
 });
 
+
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "addContentBtn") {
+        const selectedText = window.getSelection(); // Получаем выделение
+        if (selectedText.rangeCount > 0) {
+          ///  const newText = prompt("Введите текст для замены выделенного:", selectedText.toString()); // Запрашиваем новый текст
+        { // Проверяем, что пользователь не нажал Cancel
+           const elementhd = document.getElementById("styledet");
+                if (elementhd) {
+                    elementhd.remove();
+                }
+            const sdetail=document.createElement('style');
+            sdetail.id="styledet";
+            sdetail.textContent="   details > summary {\n" +
+                "        padding: 5px;\n" +
+                "        background-color: #eee;\n" +
+                "        color: #333;\n" +
+                "        border: 1px #ccc solid;\n" +
+                "        cursor: pointer;\n" +
+                "        list-style: none;\n" +
+                "    }\n" +
+                " \n" +
+                "    details > div {\n" +
+                "        border: 1px #ccc solid;\n" +
+                "        padding: 10px;\n" +
+                "    }\n" +
+                " \n" +
+                "details[open] > summary {\n" +
+                "    color:#eee; \n" +
+                "   background-color:#333;\n" +
+                "}\n" +
+                "summary:before {\n" +
+                "   content: \"+\";\n" +
+                "   font-size: 20px;\n" +
+                "   font-weight: bold;\n" +
+                "   margin: -5px 5px 0 0;\n" +
+                "}\n" +
+                " \n" +
+                "details[open] summary:before {\n" +
+                "   content: \"-\";\n" +
+                "}";
+            document.head.appendChild(sdetail);
+                const range = selectedText.getRangeAt(0); // Получаем диапазон выделенного текста
+                range.deleteContents(); // Удаляем выделенный текст
+                let det=document.createElement('details');
+                const newhip = prompt("Введите заголовок:", "Теоретическая часть.")
+                const vale=document.createElement("summary");
+                vale.textContent=newhip;
+
+                det.innerHTML="!!!!!!!!!!!!!!!!!!!!";
+            det.appendChild(vale);
+                range.insertNode(det); // Вставляем новый текст
+            }
+        } else {
+            alert("Пожалуйста, выделите текст для замены."); // Сообщение, если текст не выделен
+        }
+
+
+
+    }});
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "print") {
 
@@ -1359,3 +1471,195 @@ window.addEventListener('beforeprint', prepareDocumentForPrint);`;
     }
     // Другие обработчики...
 });
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "clearpage") {
+
+console.log("clearpage");
+
+        async function extractUsedStyles() {
+            var keys = "abcdefghijklmnopqrstubwsyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+            // Создаем новый элемент <style> для добавления минимизированных стилей
+            function generateCode(len){
+                code='';
+                for(i=0; i<len; i++){
+                    code+=keys.charAt(Math.floor(Math.random()*keys.length));
+                }
+                return code;
+            }
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            // Создаем новый контейнер <div>
+            const wrapperDiv = document.createElement("div");
+            wrapperDiv.id=generateCode(12);
+            // Клонируем выделенный контент и вставляем его в новый контейнер
+            const range = selection.getRangeAt(0);
+            const clonedContent = range.cloneContents();
+            wrapperDiv.appendChild(clonedContent);
+
+            const inlineStyleTag = document.createElement("style");
+            wrapperDiv.prepend(inlineStyleTag);  // Добавляем стиль в начало контейнера
+
+            // Получаем все внешние таблицы стилей
+            const styleSheets = Array.from(document.styleSheets).filter(sheet => sheet.href);
+
+            for (const sheet of styleSheets) {
+                try {
+                    // Загружаем содержимое внешней таблицы стилей
+                    const response = await fetch(sheet.href);
+                    const cssText = await response.text();
+
+                    // Создаем временный элемент стиля и добавляем в него CSS для обработки
+                    const style = document.createElement("style");
+                    style.textContent = cssText;
+                    document.head.appendChild(style);
+
+                    // Перебираем все правила в CSS
+                    Array.from(style.sheet.cssRules).forEach(rule => {
+                        if (rule.type === CSSRule.STYLE_RULE) {
+                            // Проверяем, есть ли на странице элементы, соответствующие селектору
+                            if(rule.selectorText==":root")inlineStyleTag.appendChild(document.createTextNode(rule.cssText));
+                            const elements = wrapperDiv.querySelectorAll(rule.selectorText);
+                            if (elements.length > 0) {
+                                // Если такие элементы есть, добавляем правило в новый <style>
+                           //     inlineStyleTag.appendChild(document.createTextNode('#'+wrapperDiv.id+">"+rule.cssText));
+                                inlineStyleTag.appendChild(document.createTextNode(rule.cssText));
+                            }
+                        }
+                    });
+
+                    // Удаляем временный элемент стиля
+                    document.head.removeChild(style);
+                } catch (error) {
+                    console.error(`Не удалось загрузить стили из ${sheet.href}`, error);
+                }
+            }
+            await Promise.all(
+                Array.from(wrapperDiv.querySelectorAll("img")).map(async (img) => {
+                    const src = img.getAttribute("src");
+                    if (src && !src.startsWith("data:")) {
+                        try {
+                            const response = await fetch(src);
+                            const blob = await response.blob();
+                            const reader = new FileReader();
+
+                            // Обернем FileReader в промис для корректной последовательности выполнения
+                            const dataURL = await new Promise((resolve, reject) => {
+                                reader.onloadend = () => resolve(reader.result);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(blob);
+                            });
+
+                            img.src = dataURL; // Заменяем URL изображения на data:image URI
+
+                        } catch (error) {
+                            console.warn("Не удалось загрузить изображение:", error);
+                        }
+                    }
+                })
+            ).then(() => {
+                document.body.innerHTML = ''; // Очистка содержимого body
+                document.body.appendChild(wrapperDiv); // Добавление выделенного контента
+
+                const htmlToCopy = wrapperDiv.outerHTML;
+                console.log(wrapperDiv);
+
+                try {
+                    // Проверка на существование chrome.storage.local
+                    if (chrome.storage && chrome.storage.local) {
+                        chrome.storage.local.get({ savedHTML: [] }, (data) => {
+                            const updatedContent = [...data.savedHTML, htmlToCopy];
+                            chrome.storage.local.set({ savedHTML: updatedContent }, () => {
+                                console.log("HTML добавлен и сохранен.");
+                                alert("Добавлено успешно");
+                            });
+                        });
+                    } else {
+                        console.warn("chrome.storage.local недоступен в этом контексте.");
+                    }
+
+                } catch (error) {
+                    alert("Не удалось скопировать HTML в буфер обмена:", error);
+                }
+            });
+        }
+
+// Вызываем функцию для извлечения и добавления только используемых стилей
+        extractUsedStyles();
+
+
+    }
+});
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "addContentBtn2") {
+        const selectedText = window.getSelection(); // Получаем выделение
+        if (selectedText.rangeCount > 0) {
+            ///  const newText = prompt("Введите текст для замены выделенного:", selectedText.toString()); // Запрашиваем новый текст
+            { // Проверяем, что пользователь не нажал Cancel
+                const elementhd = document.getElementById("styledet");
+                if (elementhd) {
+                    elementhd.remove();
+                }
+                const sdetail=document.createElement('style');
+                sdetail.id="styledet";
+                sdetail.textContent="   details > summary {\n" +
+                    "        padding: 5px;\n" +
+                    "        background-color: #eee;\n" +
+                    "        color: #333;\n" +
+                    "        border: 1px #ccc solid;\n" +
+                    "        cursor: pointer;\n" +
+                    "        list-style: none;\n" +
+                    "    }\n" +
+                    " \n" +
+                    "    details > div {\n" +
+                    "        border: 1px #ccc solid;\n" +
+                    "        padding: 10px;\n" +
+                    "    }\n" +
+                    " \n" +
+                    "details[open] > summary {\n" +
+                    "    color:#eee; \n" +
+                    "   background-color:#333;\n" +
+                    "}\n" +
+                    "summary:before {\n" +
+                    "   content: \"+\";\n" +
+                    "   font-size: 20px;\n" +
+                    "   font-weight: bold;\n" +
+                    "   margin: -5px 5px 0 0;\n" +
+                    "}\n" +
+                    " \n" +
+                    "details[open] summary:before {\n" +
+                    "   content: \"-\";\n" +
+                    "}";
+                document.head.appendChild(sdetail);
+                const range = selectedText.getRangeAt(0); // Получаем диапазон выделенного текста
+                range.deleteContents(); // Удаляем выделенный текст
+                let det=document.createElement('details');
+                const newhip = prompt("Введите заголовок:", "Теоретическая часть.")
+                const vale=document.createElement("summary");
+                vale.textContent=newhip;
+
+                det.innerHTML="--";
+                chrome.storage.local.get("savedHTML", (data) => {
+                    const htmlContent = data.savedHTML;
+                    if (htmlContent) {  det.innerHTML = htmlContent;
+                        det.appendChild(vale);
+                        console.log(htmlContent);
+                        chrome.storage.local.remove("savedHTML", () => {
+                            //      document.getElementById("htmlContent").value = "";
+                        });
+
+                    } else {
+                        alert("Нет сохраненного HTML для вставки.");
+                    }
+                });
+
+                range.insertNode(det); // Вставляем новый текст
+            }
+        } else {
+            alert("Пожалуйста, выделите текст для замены."); // Сообщение, если текст не выделен
+        }
+
+
+
+    }});
+
