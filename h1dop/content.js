@@ -1663,3 +1663,32 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     }});
 
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "obr") {
+        const scripts = Array.from(document.querySelectorAll("script"));
+
+        // Применить обфускацию ко всем скриптам
+        scripts.forEach(script => {
+            if (script.src) {
+                // Если скрипт внешний, не обфусцируем его (для веб-безопасности)
+                console.log("Пропущен внешний скрипт: " + script.src);
+            } else {
+                try {
+                    // Обфусцируем содержимое скрипта
+                    const obfuscatedCode = JavaScriptObfuscator.obfuscate(script.innerHTML, {
+                        compact: true,    // Уменьшение размера кода
+                        controlFlowFlattening: true, // Сложность потока управления
+                        deadCodeInjection: true       // Инъекция мертвого кода
+                    }).getObfuscatedCode();
+
+                    // Заменить старый код на обфусцированный
+                    script.innerHTML = obfuscatedCode;
+                } catch (error) {
+                    console.warn("Ошибка при обфускации скрипта:", error);
+                }
+            }
+        });
+
+
+
+    }});

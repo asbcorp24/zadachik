@@ -166,6 +166,12 @@ clearpage.addEventListener('click', function() {
         chrome.tabs.sendMessage(tabs[0].id, { action: "clearpage" });
     });
 });
+const obr = document.getElementById('obr'); // Новая кнопка
+obr.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "obr" });
+    });
+});
 
 const addContentBtn = document.getElementById('addContentBtn');
 addContentBtn.addEventListener('click', function() {
