@@ -1496,6 +1496,24 @@ console.log("clearpage");
             const range = selection.getRangeAt(0);
             const clonedContent = range.cloneContents();
             wrapperDiv.appendChild(clonedContent);
+// Получение всех элементов с классом socBlock
+
+// Получение всех элементов с классом socBlock
+			  elements = wrapperDiv.querySelectorAll('.socBlock');
+
+// Удаление класса с использованием forEach
+		elements.forEach(box => {
+  box.remove();
+});
+			  elements = wrapperDiv.querySelectorAll('.date');
+
+// Удаление класса с использованием forEach
+		elements.forEach(box => {
+  box.remove();
+});
+				
+				// Получение всех элементов с классом socBlock
+			 
 
             const inlineStyleTag = document.createElement("style");
             wrapperDiv.prepend(inlineStyleTag);  // Добавляем стиль в начало контейнера
