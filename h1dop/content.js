@@ -1710,3 +1710,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 
     }});
+	
+	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "savef") {
+        const htmlContent = document.documentElement.outerHTML;
+
+    // Создаем Blob-объект для данных
+    const blob = new Blob([htmlContent], { type: "text/html" });
+
+    // Создаем ссылку для скачивания
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "page_backup.html";  // Имя файла
+
+    // Добавляем ссылку на страницу и эмулируем клик
+    document.body.appendChild(link);
+    link.click();
+
+    // Удаляем ссылку после скачивания
+    document.body.removeChild(link);
+        };
+
+
+
+    });
