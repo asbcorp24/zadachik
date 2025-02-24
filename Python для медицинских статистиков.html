@@ -6661,7 +6661,132 @@ function prepareDocumentForPrint() {
         element.classList.remove('columns');
     });
 }
-window.addEventListener('beforeprint', prepareDocumentForPrint);</script><div id="bcon" style="position: fixed; bottom: 20px; right: 150px; z-index: 10000;"><button id="hidebt" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="black" fill="none"></circle><path d="M12 16v.01M12 12c0-1.1.9-2 2-2 1.1 0 2 .9 2 2 0 1.1-.9 2-2 2H10v-.01M10 8h1c.6 0 1-.4 1-1s-.4-1-1-1H9c-.6 0-1 .4-1 1s.4 1 1 1z"></path></svg></button><button id="backButton" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button><button class="actionButton" id="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="black" fill="none"></circle><rect x="8" y="8" width="8" height="8" fill="currentColor"></rect></svg></button></div><script id="scrhide"> 
+window.addEventListener('beforeprint', prepareDocumentForPrint);</script><div id="bcon" style="position: fixed; bottom: 20px; right: 150px; z-index: 10000;"><button id="hidebt" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="black" fill="none"></circle><path d="M12 16v.01M12 12c0-1.1.9-2 2-2 1.1 0 2 .9 2 2 0 1.1-.9 2-2 2H10v-.01M10 8h1c.6 0 1-.4 1-1s-.4-1-1-1H9c-.6 0-1 .4-1 1s.4 1 1 1z"></path></svg></button><button id="Buttonpar" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8l10 7 10-7"></path><path d="M2 8v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8"></path></svg></button><button id="backButton" class="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button><button class="actionButton" id="actionButton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke="black" fill="none"></circle><rect x="8" y="8" width="8" height="8" fill="currentColor"></rect></svg></button></div><script id="scrhide"> 
+     const storageKey = 'scrollPosHistory_' + window.location.pathname;
+   document.addEventListener("DOMContentLoaded", function() {
+  // Создаем или получаем контейнер для кружков
+  let circleContainer = document.getElementById("scrollHistoryCircles");
+  if (!circleContainer) {
+    circleContainer = document.createElement("div");
+    circleContainer.id = "scrollHistoryCircles";
+    circleContainer.style.position = "fixed";
+    circleContainer.style.top = "50%";
+    circleContainer.style.right = "10px";
+    circleContainer.style.transform = "translateY(-50%)";
+    circleContainer.style.display = "flex";
+    circleContainer.style.flexDirection = "column";
+    circleContainer.style.gap = "10px";
+    document.body.appendChild(circleContainer);
+  }
+
+  // Создаем красный кружок для очистки закладок, если его еще нет
+  let redCircle = document.getElementById("clearBookmarks");
+  if (!redCircle) {
+    redCircle = document.createElement("div");
+    redCircle.id = "clearBookmarks";
+    redCircle.classList.add("scroll-history-circle", "clear-bookmarks");
+    redCircle.style.width = "20px";
+    redCircle.style.height = "20px";
+    redCircle.style.borderRadius = "50%";
+    redCircle.style.backgroundColor = "red";
+    redCircle.style.width = "20px";
+      redCircle.style.margin = "10px";
+        redCircle.style.padding = "5px";
+         redCircle.style.display = "grid";
+    redCircle.style.cursor = "pointer";
+    redCircle.style.display = "flex";
+    redCircle.style.alignItems = "center";
+    redCircle.style.justifyContent = "center";
+    redCircle.style.color = "white";
+    redCircle.style.fontSize = "12px";
+    redCircle.textContent = "X"; // символ для очистки
+
+    // При клике очищаем историю закладок
+    redCircle.addEventListener("click", function() {
+      localStorage.removeItem(storageKey);
+      // Удаляем все синие кружки с закладками
+      let bookmarkCircles = document.querySelectorAll(".scroll-history-circle.bookmark");
+      bookmarkCircles.forEach(circle => circle.remove());
+    });
+
+    circleContainer.appendChild(redCircle);
+  }
+
+  // Загружаем сохраненные позиции из localStorage
+  let history = localStorage.getItem(storageKey);
+  if (history) {
+    history = JSON.parse(history);
+    history.forEach((pos, index) => {
+      const bookmarkCircle = document.createElement("div");
+      bookmarkCircle.classList.add("scroll-history-circle", "bookmark");
+      bookmarkCircle.dataset.scrollPos = pos;
+      bookmarkCircle.style.width = "20px";
+      bookmarkCircle.style.margin = "10px";
+        bookmarkCircle.style.padding = "5px";
+         bookmarkCircle.style.display = "grid";
+      bookmarkCircle.style.height = "20px";
+      bookmarkCircle.style.borderRadius = "50%";
+      bookmarkCircle.style.backgroundColor = "#3498db";
+      bookmarkCircle.style.cursor = "pointer";
+      bookmarkCircle.style.display = "flex";
+      bookmarkCircle.style.alignItems = "center";
+      bookmarkCircle.style.justifyContent = "center";
+      bookmarkCircle.style.color = "white";
+      bookmarkCircle.style.fontSize = "12px";
+      // Нумерация закладок
+      bookmarkCircle.textContent = index + 1;
+      bookmarkCircle.addEventListener("click", function() {
+        const pos = parseInt(this.dataset.scrollPos, 10);
+        window.scrollTo({ top: pos, behavior: 'smooth' });
+      });
+
+      // Вставляем закладку перед красным кружком, чтобы он всегда оставался внизу
+      circleContainer.insertBefore(bookmarkCircle, redCircle);
+    });
+  }
+});
+
+// Обработчик для сохранения новой позиции при двойном клике
+document.getElementById("Buttonpar").addEventListener("click", function() {
+  // Получаем историю из localStorage или создаем новый массив
+  let history = localStorage.getItem(storageKey);
+  history = history ? JSON.parse(history) : [];
+
+  const currentPos = window.pageYOffset;
+  history.push(currentPos);
+  localStorage.setItem(storageKey, JSON.stringify(history));
+
+  // Создаем новый синий кружок для закладки
+  const bookmarkCircle = document.createElement("div");
+  bookmarkCircle.classList.add("scroll-history-circle", "bookmark");
+  bookmarkCircle.dataset.scrollPos = currentPos;
+  bookmarkCircle.style.width = "20px";
+      bookmarkCircle.style.margin = "10px";
+        bookmarkCircle.style.padding = "5px";
+         bookmarkCircle.style.display = "grid";
+  bookmarkCircle.style.width = "20px";
+  bookmarkCircle.style.height = "20px";
+  bookmarkCircle.style.borderRadius = "50%";
+  bookmarkCircle.style.backgroundColor = "#3498db";
+  bookmarkCircle.style.cursor = "pointer";
+  bookmarkCircle.style.display = "flex";
+  bookmarkCircle.style.alignItems = "center";
+  bookmarkCircle.style.justifyContent = "center";
+  bookmarkCircle.style.color = "white";
+  bookmarkCircle.style.fontSize = "12px";
+  bookmarkCircle.textContent = history.length; // порядковый номер закладки
+
+  bookmarkCircle.addEventListener("click", function() {
+    const pos = parseInt(this.dataset.scrollPos, 10);
+    window.scrollTo({ top: pos, behavior: 'smooth' });
+  });
+
+  // Вставляем новый кружок перед красным, чтобы он всегда оставался внизу
+  const circleContainer = document.getElementById("scrollHistoryCircles");
+  const redCircle = document.getElementById("clearBookmarks");
+  circleContainer.insertBefore(bookmarkCircle, redCircle);
+});
+
    document.getElementById("hidebt").addEventListener("click", function() {
     const ltrElements = document.querySelectorAll('[dir="ltr"]');
 

@@ -180,7 +180,43 @@ svg.appendChild(rect);
 
         return svg;
     };
+    const createParagraphSVG = () => {
+        const xmlns = "http://www.w3.org/2000/svg";
 
+        // Создаём основной SVG элемент
+        const svg = document.createElementNS(xmlns, "svg");
+        svg.setAttribute("width", "24");
+        svg.setAttribute("height", "24");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "black");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+
+        // Линия открывающегося флапа (верхняя линия письма)
+        const flap = document.createElementNS(xmlns, "path");
+        flap.setAttribute("d", "M2 8l10 7 10-7");
+
+        // Тело письма
+        const body = document.createElementNS(xmlns, "path");
+        body.setAttribute("d", "M2 8v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8");
+
+        // Добавляем элементы в SVG
+        svg.appendChild(flap);
+        svg.appendChild(body);
+
+        return svg;
+    };
+    const Buttonpar = document.createElement("button");
+    Buttonpar.id="Buttonpar";
+    Buttonpar.className = "actionButton";
+    Buttonpar.ondblclick = () => {
+        //window.location.href = '#toc';
+    };
+    Buttonpar.onclick = () => {
+        //window.location.href = '#toc';
+    };
 // Добавляем стрелку в body
 backButton.appendChild(createArrowSVG());
     const toggleColorButton = document.createElement("button");
@@ -209,6 +245,131 @@ backButton.appendChild(createArrowSVG());
     const cript=document.createElement('script');
     cript.id="scrhide";
     cript.textContent=` 
+     const storageKey = 'scrollPosHistory_' + window.location.pathname;
+   document.addEventListener("DOMContentLoaded", function() {
+  // Создаем или получаем контейнер для кружков
+  let circleContainer = document.getElementById("scrollHistoryCircles");
+  if (!circleContainer) {
+    circleContainer = document.createElement("div");
+    circleContainer.id = "scrollHistoryCircles";
+    circleContainer.style.position = "fixed";
+    circleContainer.style.top = "50%";
+    circleContainer.style.right = "10px";
+    circleContainer.style.transform = "translateY(-50%)";
+    circleContainer.style.display = "flex";
+    circleContainer.style.flexDirection = "column";
+    circleContainer.style.gap = "10px";
+    document.body.appendChild(circleContainer);
+  }
+
+  // Создаем красный кружок для очистки закладок, если его еще нет
+  let redCircle = document.getElementById("clearBookmarks");
+  if (!redCircle) {
+    redCircle = document.createElement("div");
+    redCircle.id = "clearBookmarks";
+    redCircle.classList.add("scroll-history-circle", "clear-bookmarks");
+    redCircle.style.width = "20px";
+    redCircle.style.height = "20px";
+    redCircle.style.borderRadius = "50%";
+    redCircle.style.backgroundColor = "red";
+    redCircle.style.width = "20px";
+      redCircle.style.margin = "10px";
+        redCircle.style.padding = "5px";
+         redCircle.style.display = "grid";
+    redCircle.style.cursor = "pointer";
+    redCircle.style.display = "flex";
+    redCircle.style.alignItems = "center";
+    redCircle.style.justifyContent = "center";
+    redCircle.style.color = "white";
+    redCircle.style.fontSize = "12px";
+    redCircle.textContent = "X"; // символ для очистки
+
+    // При клике очищаем историю закладок
+    redCircle.addEventListener("click", function() {
+      localStorage.removeItem(storageKey);
+      // Удаляем все синие кружки с закладками
+      let bookmarkCircles = document.querySelectorAll(".scroll-history-circle.bookmark");
+      bookmarkCircles.forEach(circle => circle.remove());
+    });
+
+    circleContainer.appendChild(redCircle);
+  }
+
+  // Загружаем сохраненные позиции из localStorage
+  let history = localStorage.getItem(storageKey);
+  if (history) {
+    history = JSON.parse(history);
+    history.forEach((pos, index) => {
+      const bookmarkCircle = document.createElement("div");
+      bookmarkCircle.classList.add("scroll-history-circle", "bookmark");
+      bookmarkCircle.dataset.scrollPos = pos;
+      bookmarkCircle.style.width = "20px";
+      bookmarkCircle.style.margin = "10px";
+        bookmarkCircle.style.padding = "5px";
+         bookmarkCircle.style.display = "grid";
+      bookmarkCircle.style.height = "20px";
+      bookmarkCircle.style.borderRadius = "50%";
+      bookmarkCircle.style.backgroundColor = "#3498db";
+      bookmarkCircle.style.cursor = "pointer";
+      bookmarkCircle.style.display = "flex";
+      bookmarkCircle.style.alignItems = "center";
+      bookmarkCircle.style.justifyContent = "center";
+      bookmarkCircle.style.color = "white";
+      bookmarkCircle.style.fontSize = "12px";
+      // Нумерация закладок
+      bookmarkCircle.textContent = index + 1;
+      bookmarkCircle.addEventListener("click", function() {
+        const pos = parseInt(this.dataset.scrollPos, 10);
+        window.scrollTo({ top: pos, behavior: 'smooth' });
+      });
+
+      // Вставляем закладку перед красным кружком, чтобы он всегда оставался внизу
+      circleContainer.insertBefore(bookmarkCircle, redCircle);
+    });
+  }
+});
+
+// Обработчик для сохранения новой позиции при двойном клике
+document.getElementById("Buttonpar").addEventListener("click", function() {
+  // Получаем историю из localStorage или создаем новый массив
+  let history = localStorage.getItem(storageKey);
+  history = history ? JSON.parse(history) : [];
+
+  const currentPos = window.pageYOffset;
+  history.push(currentPos);
+  localStorage.setItem(storageKey, JSON.stringify(history));
+
+  // Создаем новый синий кружок для закладки
+  const bookmarkCircle = document.createElement("div");
+  bookmarkCircle.classList.add("scroll-history-circle", "bookmark");
+  bookmarkCircle.dataset.scrollPos = currentPos;
+  bookmarkCircle.style.width = "20px";
+      bookmarkCircle.style.margin = "10px";
+        bookmarkCircle.style.padding = "5px";
+         bookmarkCircle.style.display = "grid";
+  bookmarkCircle.style.width = "20px";
+  bookmarkCircle.style.height = "20px";
+  bookmarkCircle.style.borderRadius = "50%";
+  bookmarkCircle.style.backgroundColor = "#3498db";
+  bookmarkCircle.style.cursor = "pointer";
+  bookmarkCircle.style.display = "flex";
+  bookmarkCircle.style.alignItems = "center";
+  bookmarkCircle.style.justifyContent = "center";
+  bookmarkCircle.style.color = "white";
+  bookmarkCircle.style.fontSize = "12px";
+  bookmarkCircle.textContent = history.length; // порядковый номер закладки
+
+  bookmarkCircle.addEventListener("click", function() {
+    const pos = parseInt(this.dataset.scrollPos, 10);
+    window.scrollTo({ top: pos, behavior: 'smooth' });
+  });
+
+  // Вставляем новый кружок перед красным, чтобы он всегда оставался внизу
+  const circleContainer = document.getElementById("scrollHistoryCircles");
+  const redCircle = document.getElementById("clearBookmarks");
+  circleContainer.insertBefore(bookmarkCircle, redCircle);
+});
+
    document.getElementById("hidebt").addEventListener("click", function() {
     const ltrElements = document.querySelectorAll('[dir="ltr"]');
 
@@ -250,12 +411,17 @@ backButton.appendChild(createArrowSVG());
 
 `;
 
+
+    Buttonpar.appendChild(createParagraphSVG());
+
  toggleColorButton.appendChild(createRefreshSVG());
 /*
 // Добавляем символ в body
 document.body.appendChild(createRefreshSVG());*/
     backButton2.appendChild(createhideSVG());
     buttonContainer.appendChild(backButton2);
+    buttonContainer.appendChild(Buttonpar);
+
     buttonContainer.appendChild(backButton);
     buttonContainer.appendChild(toggleColorButton);
     document.body.appendChild(buttonContainer);
