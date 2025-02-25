@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420px" height="250px" viewBox="0 20 420 250">
+
+<path fill="#D2D4D5" d="M 382,259 v -230 l -322,97 v 18 l 322,97"/>
+<path fill="#FFFFFF" stroke="#7D7F82" stroke-width="1.5" d="M273,130c-6-30,44-43,51-7c37,12,14,55-19,40C278,184,247,152,273,130z"/>
+
+<path fill="none" stroke="#3C3C3C" d="M169.89,99.16c14.81,21.77,14.81,49.91,0,71.68"/>
+<path fill="#3C3C3C" d="M174.21,97.62L166,94l0.97,8.92zM166,176l8.21-3.62l-7.24-5.3z"/>
+
+<line fill="none" stroke="#7D7F82" stroke-width="1.5" x1="26" y1="149" x2="381" y2="255"/>
+<g fill="#7D7F82">
+	<circle r="6" cx="32" cy="135"/>
+	<circle r="4" cx="60" cy="159"/>
+	<circle r="4" cx="381" cy="255"/>
+</g>
+
+<text fill="#3C3C3C" font-size="12px" font-weight="bold" font-family="Arial, sans-serif">
+	<tspan x="26" y="180">Near Clip</tspan>
+	<tspan x="320" y="265">Far Clip</tspan>
+	<tspan x="187" y="141">FOV Angle</tspan>
+	<tspan x="328" y="68">Visible</tspan>
+</text>
+
+</svg>

@@ -1,0 +1,689 @@
+<style>
+.container {
+    display: flex;
+    height: 100vh; /* Высота на весь экран */
+}
+
+#contents{
+    flex: 1; /* Левый блок занимает всю доступную ширину */
+    padding: 20px;
+    border-right: 2px solid #ddd; /* Разделительная линия */
+    overflow-y: auto; /* Прокрутка, если контент длинный */
+}
+
+.main  {
+    /* Фиксированная ширина справа */
+    min-width: 250px; /* Минимальная ширина */
+  /* Максимальная ширина */
+    background-color: #f8f8f8; /* Светлый фон */
+    padding: 20px;
+    overflow-y: auto; /* Прокрутка, если контент длинный */
+}
+
+a.headerlink {
+    visibility: hidden;
+} 
+</style>
+<link href="basic.css" rel="stylesheet">
+<div class="container">
+<div id="contents"></div>
+<div class="main">
+
+
+<p class="caption" role="heading"><span class="caption-text">Разделы</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="interface!index">Интерфейс пользователя</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interface!window_system!index">Система окон</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface!keymap!index">Раскладка (keymap)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface!controls!index">UI Elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface!tools_operators">Инструменты и операторы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface!controls!nodes!index">Ноды (nodes)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="editors!index">Редакторы (editors)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="editors!3dview!index">3D-Вьюпорт (3D viewport)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!image!index">Редактор изображений (image editor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!uv!index">UV-Редактор (UV editor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!compositor">Компо́зитор (compositor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!texture_node!index">Текстура (texture nodes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!geometry_node">Редактор геометрических нод (geometry node editor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!shader_editor">Редактор шейдеров (shader editor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!video_sequencer!index"><abbr title="Видеоредактор">Секвенсор видео</abbr> (video sequencer)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!clip!index">Редактор видеофрагментов (movie clip editor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!dope_sheet!index">Dope Sheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!timeline">Timeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!graph_editor!index">Graph Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!drivers_editor">Редактор драйверов (drivers editor)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!nla!index">Нелинейная анимация (nonlinear animation)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!text_editor">Text Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!python_console">Консоль Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!info_editor">Info Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!outliner!index">Аутлайнер (outliner)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!properties_editor">Свойства (properties)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!file_browser">Браузер файлов (file browser)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!asset_browser">Браузер ассетов</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!spreadsheet">Табличный редактор (spreadsheet)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="editors!preferences!index">Настройки (preferences)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scene_layout!index">Сцены и Объекты</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scene_layout!scene!index">Сцены (scenes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scene_layout!object!index">Объекты (objects)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scene_layout!collections!index">Коллекции (collections)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scene_layout!view_layers!index">View Layers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modeling!index">Моделирование (modeling)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modeling!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!meshes!index">Меши (meshes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!curves!index">Кривые (curves)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!curves_new!index">Кривые (новые) (curves (new))</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!surfaces!index">Поверхности (surfaces)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!metas!index">Метасфера (metaball)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!texts!index">Текст (text)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!volumes!index">Объёмы (volumes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!empties">Пустышки (empties)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!modifiers!index">Модификаторы (modifiers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!geometry_nodes!index">Геометрические <abbr title="узлы">ноды</abbr> (geometry nodes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modeling!transform!index">Трансформировать (transform)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sculpt_paint!index"><abbr title="Sculpting &amp; Painting">Скульптинг и Рисование</abbr></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sculpt_paint!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sculpt_paint!brush!index">Кисти (brushes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sculpt_paint!selection_visibility">Selection &amp; Visibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sculpt_paint!navigation">Навигация</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sculpt_paint!index#modes">Режимы</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="grease_pencil!index">Grease Pencil</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!structure">Структура (structure)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!primitives">Примитивы (primitives)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!properties!index">Свойства (properties)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!modifiers!index">Модификаторы (modifiers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!visual_effects!index">Visual Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!materials!index">Материалы (materials)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!multiframe">Multiframe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!animation!index">Анимация (animation)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grease_pencil!modes!index">"Режимы" объекта</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="animation!index"><abbr title="Animation &amp; Rigging">Анимация и Риггинг</abbr></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="animation!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!keyframes!index">Ключевые кадры</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!armatures!index">Арматуры (armatures)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!lattice">Решётка (lattice)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!constraints!index">Ограничители (constraints)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!actions">Actions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!drivers!index">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!markers">Маркеры (мarkers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!shape_keys!index">Ключи формы (shape keys)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="animation!motion_paths">Траектории движения (motion paths)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="physics!index">Физика (physics)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="physics!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!rigid_body!index">Твёрдое тело (rigid body)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!cloth!index">Ткань (cloth)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!soft_body!index">Мягкое тело (soft body)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!fluid!index">Флюид (fluid)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!particles!index">Система частиц (particle system)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!dynamic_paint!index">Динамическое рисование (dynamic paint)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!forces!index">Силы (forces)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!collision">Столкновение (collision)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!baking">Запекание физических симуляций (baking physics simulations)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics!simulation_nodes">Ноды симуляции (simulation nodes)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="render!index">Рендеринг (rendering)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="render!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!eevee!index">EEVEE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!cycles!index">Cycles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!workbench!index">Workbench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!cameras">Камеры (cameras)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!lights!index">Источники освещения (lights)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!materials!index">Материалы (materials)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!shader_nodes!index">Ноды шейдеров (shader nodes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!color_management">Управление цветом (color management)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!freestyle!index">Freestyle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!layers!index">Layers &amp; Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="render!output!index">Render Output</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="compositing!index">Компо́зитинг (compositing)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compositing!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compositing!sidebar">Боковая панель</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compositing!realtime_compositor"><abbr title="GPU Compositor">GPU Компо́зитор</abbr></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compositing!index#node-types">Типы нод (node types)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="movie_clip!index"><abbr title="Motion Tracking &amp; Masking">Отслеживание движения и Маски́рование</abbr></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="movie_clip!tracking!index">Отслеживание движения (motion tracking)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="movie_clip!masking!index">Маски́рование (masking)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="video_editing!index">Редактирование видео (video editing)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="video_editing!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="video_editing!setup!index">Настройте свой проект</a></li>
+<li class="toctree-l2"><a class="reference internal" href="video_editing!edit!index">Редактировать свой проект</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="files!index">Ассеты, Файлы и Системные данные</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="files!introduction">Введение</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!blend!index">Blender File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!data_blocks"><abbr title="Data-Blocks">Блоки данных</abbr></a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!custom_properties">Пользовательские свойства</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!linked_libraries!index">Linked Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!asset_libraries!index">Библиотеки ассетов (Asset Libraries)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!media!index">Media Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="files!import_export!index">Importing &amp; Exporting Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="addons!index">Дополнения (add-ons)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="addons!index#add-ons-category-listings">Список категорий аддонов</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced!index">Дополнительно (advanced)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced!command_line!index">Using Blender From The Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!scripting!index">Скриптинг и расширения Blender</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!extensions!index">Creating Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!app_templates">Шаблоны приложений (Application Templates)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!keymap_editing">Настройка раскладки клавиатуры (Keymap Customization)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!limits">Рабочие пределы (Working Limits)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!operators">Операторы</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!blender_directory_layout">Макет каталога Blender</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!deploying_blender">Deploying Blender in Production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced!appendices!index">Добавления (Appendices)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting!index">Решение проблем</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting!startup">Начало (Startup)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting!3d_view">3D-Вьюпорт (3D viewport)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting!gpu!index">Графическое оборудование</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting!crash">Сбои</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting!python">Ошибки Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting!recover">Восстановление данных</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="glossary!index">Словарь</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex">Алфавитный указатель</a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+
+<script src="merged.json"></script>
+<style>
+.back-to-top {
+     
+    width: 30px; /* Ширина кнопки */
+    height: 30px; /* Высота кнопки */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+ body {
+	--sidebar-caption-font-size: var(--font-size--normal);
+	--toc-title-font-size: var(--font-size--normal);
+	--toc-font-size: var(--sidebar-item-font-size);
+	--admonition-font-size: var(--font-size--normal);
+	--admonition-title-font-size: var(--font-size--normal);
+	--color-api-name: #e87d0d;
+	--color-brand-visited: var(--color-brand-content) !important;
+}
+
+h1,
+h2,
+h3 {
+	margin-top: 1.75rem;
+	margin-bottom: 1rem;
+}
+
+h1 {
+	font-size: 2em;
+}
+
+h2 {
+	font-size: 1.5em;
+}
+
+h3 {
+	font-size: 1.25em;
+}
+
+h4,
+h5,
+h6,
+.rubric {
+	margin-top: 1.25rem;
+	margin-bottom: 0.75rem;
+	font-size: 1.125em;
+}
+
+/* Reduce the margins on top/bottom of horizontal lines. */
+hr.docutils {
+	margin: 1rem 0;
+}
+
+
+/* Slightly decrease text to make the text fit on one line */
+.sidebar-brand-text {
+	font-size: 1.4rem;
+}
+
+.toctree-checkbox~label .icon svg {
+	transition: transform 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.toctree-checkbox~label .icon svg {
+		transition-duration: 0s !important;
+	}
+}
+
+/* Add more visual weight to definition terms */
+dl dt {
+	font-weight: bold !important
+}
+
+/* Fixes to field list, see #104636 */
+dl.field-list {
+	display: grid;
+	grid-template-columns: auto minmax(80%, 95%);
+	row-gap: 0.125em;
+}
+
+.field-list > dt {
+	margin-top: 0 !important;
+}
+
+.field-list > dd > p {
+	margin-top: 0 !important;
+}
+
+dl.field-list > dd > p:last-child {
+	margin-bottom: 0;
+}
+
+/* Revert back to normal definitions for field lists on mobile
+   inside a definition (gives more room for definition text). */
+@media (max-width: calc(67em / 2)) {
+	dd > dl.field-list  {
+		grid-template-columns: unset;
+    }
+}
+
+/* TABLE & FIGURE */
+
+/* Cell's vertical align. */
+/* use "valign" class for middle align */
+table.docutils:not(.valign) td {
+	vertical-align: baseline;
+}
+
+/* Decrease whitespace above figure and add it below */
+figure {
+	padding-bottom: 0.5rem;
+}
+
+figcaption {
+	margin-bottom: 0.5rem !important;
+
+	p {
+		margin-top: 0;
+	}
+}
+
+/* Allow horizontal lists to collapse on narrow screens */
+.hlist tr {
+	display: flex;
+	flex-flow: row wrap;
+}
+
+/* End TABLE & FIGURE. */
+
+/* Force admonition to span the full width if close to a figure */
+.admonition {
+	clear: both;
+}
+
+/* Use secondary font color for caption text */
+figcaption,
+caption {
+	color: var(--color-foreground-secondary);
+	font-size: var(--font-size--small)
+}
+
+/* A bit hacky, revert the themes styling of kbd */
+kbd:not(.compound) {
+	all: revert;
+}
+
+/* Only style parent kbd elements instead of the individual children */
+:not(dl.option-list)> :not(kbd):not(kbd)>kbd,
+.menuselection {
+	background-color: var(--color-background-secondary);
+	border: 1px solid var(--color-foreground-border);
+	border-radius: .2rem;
+	box-shadow: 0 .0625rem 0 rgba(0, 0, 0, .2), inset 0 0 0 .125rem var(--color-background-secondary);
+	color: var(--color-foreground-primary);
+	display: inline-block;
+	margin: 0;
+	padding: 0 .2rem;
+}
+
+/* Don't underline any text within code blocks (hurts readability). */
+.highlight .nc,
+.highlight .nn,
+.highlight .gu {
+	text-decoration-line: none !important;
+}
+
+.caption .menuselection {
+	background-color: transparent;
+	border: none;
+}
+
+a {
+	text-decoration: none;
+}
+
+/* Break long code references onto a second line */
+a > code.docutils {
+	overflow-wrap: anywhere;
+}
+
+/* Quotes for Fig. "link". */
+a[href^="#fig-"]::before {
+	content: "\201c";
+}
+
+a[href^="#fig-"]::after {
+	content: "\201d";
+}
+
+/* Mark external links. */
+a.external:not(figure > a.external) {
+	filter: brightness(150%);
+}
+ .lead {
+	clear: both;
+	width: 100%;
+}
+
+/* Start reference admonition. */
+.admonition.refbox {
+	border-color: rgb(50, 50, 50);
+}
+
+.admonition.refbox>.admonition-title {
+	background-color: rgba(50, 50, 50, 0.2);
+	border-color: rgb(50, 50, 50);
+}
+
+.admonition.refbox>.admonition-title::before {
+	background-color: var(--color-content-foreground);
+}
+
+/* 'refbox' field. */
+.refbox .field-list .field-name,
+.refbox .field-list .field-body {
+	padding: 0;
+}
+
+.refbox dl dt {
+	font-weight: normal
+}
+
+/* End reference admonition. */
+
+/* Applied on main index:sections. */
+
+.global-index-toc {
+	display: none;
+}
+
+/* Start section cards. */
+.toc-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+	grid-gap: 20px;
+	list-style-type: none;
+	margin-bottom: 24px;
+}
+
+.card {
+	border-radius: .3em;
+	user-select: none;
+}
+
+.card div.figure,
+.card figure {
+	margin-bottom: 0;
+	display: block;
+}
+
+.card img {
+	border-top-left-radius: .3em;
+	border-top-right-radius: .3em;
+}
+
+.card dl {
+	margin-bottom: 10px
+}
+
+.card dl dt>a {
+	display: block;
+	width: 100%;
+	margin-bottom: 10px;
+}
+
+.card dl dt a em,
+.card dl dt a span {
+	font-weight: bold;
+	font-style: normal;
+	font-size: 1.3em;
+}
+
+.card dl dt {
+	padding: 0 15px 0 !important
+}
+
+.card dl dd {
+	padding: 0 15px 5px 15px;
+	font-style: normal;
+	margin: 0;
+	color: var(--color-foreground-secondary);
+	font-size: 90%;
+}
+
+.card {
+	box-shadow: 0 .2rem .5rem rgba(0, 0, 0, .05), 0 0 .0625rem rgba(0, 0, 0, .1);
+}
+
+#getting-started .card {
+	box-shadow: none;
+}
+
+/* End section cards. */
+
+/* Start custom toctree. */
+/* Indent all lines following the first. */
+.toctree-wrapper * a {
+	display: block;
+	padding-top: 0.25em;
+}
+
+/* Make the top level links act like H2 tags. */
+.toctree-wrapper .toctree-l1 > a {
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+.toctree-wrapper ul {
+	list-style: none;
+	padding-left: 0;
+}
+
+/* Underline provided by nested ul (not li). */
+.toctree-wrapper * ul {
+	margin-bottom: 1rem !important;
+	border-top: solid var(--color-background-border) 1px;
+	padding-left: 2em;
+	padding-top: 0.25em;
+}
+
+/* End custom toctree. */
+
+/* Start footer contribute link */
+.footer-contribute {
+	display: block;
+	font-size: var(--font-size--small);
+}
+
+.bottom-of-page {
+	padding-bottom: 0;
+}
+
+.footer-contribute ul {
+	display: flex;
+	gap: 1.5rem;
+	margin: 0;
+	padding: 0;
+	padding-bottom: 1rem
+}
+
+.footer-contribute li {
+	list-style-type: none;
+}
+
+@media (max-width: 46em) {
+	.footer-contribute > ul {
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+@media print {
+	.footer-contribute {
+		display: none;
+	}
+}  
+
+</style>
+<script>
+let jsonData = {};
+
+function loadJsonData() {
+    if (typeof mergedJson !== "undefined") {
+        jsonData = mergedJson;
+        console.log("✅ JSON данные загружены:", jsonData);
+    } else {
+        console.error("❌ Ошибка: mergedJson не найден. Проверьте загрузку <script> с JSON.");
+    }
+}
+
+function processLinksAndImages(tempDiv) {
+    // Обрабатываем изображения
+    tempDiv.querySelectorAll("img[src]").forEach(img_tag => {
+        let src = img_tag.getAttribute("src");
+        src = src.replace(/\.\.\/\.\.\//g, "").replace(/\.\.\//g, "").replace(/^\/+/, "");
+		 src = src.replace("png", "webp").replace("jpg", "webp");
+        img_tag.setAttribute("src", src);
+    });
+
+    // Обновляем ссылки
+    tempDiv.querySelectorAll("a[href]").forEach(a_tag => {
+        let href = a_tag.getAttribute("href");
+
+        // Удаляем ненужные пути
+        href = href.replace(/^file:\/\/\/E:\/pyproject\/blender\/___E:_pyproject_/, "");
+        href = href.replace("blender_manual_vdev_ru", "");
+
+        // Меняем `/` на `_` и `.html` на `_html`
+        href = href.replace(/\//g, "_").replace(/\.html/g, "");
+
+        // Обновляем ссылку
+        a_tag.setAttribute("href", href);
+        console.log(`🔗 Обновленная ссылка: ${href}`);
+    });
+}
+
+function attachLinkHandler(container) {
+    container.querySelectorAll("a[href]").forEach(link => {
+        link.addEventListener("click", function (event) {
+            event.preventDefault(); // Отменяем стандартное поведение ссылки
+
+            let fullLink = link.getAttribute("href");
+            if (!fullLink) return;
+
+            // Разделяем ссылку на основную часть и анкор (если есть #)
+            let [linkClass, anchor] = fullLink.split("#");
+
+            // Сохраняем значение ссылки до первого "!"
+            let match = linkClass.match(/^(.*?)!/);
+            let savedValue = match ? match[1] : linkClass;
+            console.log("🔗 Сохраненное значение:", savedValue);
+
+            // Проверяем, есть ли данные в JSON
+            let jsonItem = jsonData.find(item => item.filename.endsWith(linkClass));
+            if (!jsonItem) {
+                console.error(`❌ Данные для ${linkClass} не найдены в JSON`);
+                return;
+            }
+
+            try {
+                // Декодируем base64 в бинарный массив
+                let binaryString = atob(jsonItem.data);
+                let uint8Array = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    uint8Array[i] = binaryString.charCodeAt(i);
+                }
+
+                // Распаковываем Gzip
+                let decompressedData = pako.inflate(uint8Array, { to: "string" });
+
+                // Создаём временный контейнер для парсинга HTML
+                let tempDiv = document.createElement("div");
+                tempDiv.innerHTML = decompressedData;
+
+                // Обрабатываем ссылки и изображения
+                processLinksAndImages(tempDiv);
+
+                // Вставляем обновлённое содержимое в #contents
+                let contentsDiv = document.getElementById("contents");
+                contentsDiv.innerHTML = tempDiv.innerHTML;
+
+                // **Заново привязываем обработчики только к #contents**
+                attachLinkHandler(contentsDiv);
+
+                // Скрываем ненужные элементы
+                ['.back-to-top','.bottom-of-page', '.footer-contribute', '.toc-drawer', '.content-icon-container'].forEach(selector => {
+                    contentsDiv.querySelectorAll(selector).forEach(el => el.style.display = 'none');
+                });
+
+                // Если есть анкор, переходим к нему
+                if (anchor) {
+                    let targetAnchor = document.getElementById(anchor);
+                    if (targetAnchor) {
+                        targetAnchor.scrollIntoView({ behavior: "smooth" });
+                    }
+                }
+
+            } catch (error) {
+                console.error("❌ Ошибка при распаковке данных:", error);
+            }
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadJsonData(); // Загружаем JSON при загрузке страницы
+    attachLinkHandler(document.body); // Применяем обработчики сразу ко всему документу
+});
+
+
+</script>

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="690px"
+   height="220px"
+   viewBox="0 0 690 220"
+   version="1.1"
+   id="svg256">
+  <metadata
+     id="metadata262">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs260" />
+  <g
+     id="gStrip">
+    <rect
+       style="stroke-width:1.10268"
+       id="strip_fill"
+       height="70.941452"
+       width="350.95856"
+       y="108.05855"
+       x="159.04144"
+       fill="#999999" />
+    <rect
+       x="80"
+       y="179"
+       width="80"
+       height="10"
+       id="offset"
+       style="opacity:0.3" />
+    <rect
+       x="159.04144"
+       y="108.05855"
+       width="470.79446"
+       height="70.777344"
+       id="strip_border"
+       style="fill:none;stroke:#333333;stroke-width:2.26473" />
+    <text
+       style="text-align:center;text-anchor:middle"
+       y="-8.0545864"
+       x="46.62429"
+       id="text230"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle"
+         id="tspan228"
+         y="99.945412"
+         x="158.99782">Soft start</tspan></text>
+    <text
+       style="text-align:center;text-anchor:middle"
+       y="-8.0545788"
+       x="63.563072"
+       id="text234"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle"
+         id="tspan232"
+         y="99.945412"
+         x="628.4964">Soft end</tspan></text>
+    <text
+       y="4"
+       id="text238"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         id="tspan236"
+         y="174"
+         x="80">Offset</tspan></text>
+    <text
+       x="-9.4990101"
+       y="4"
+       id="text242"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         id="tspan240"
+         y="199"
+         x="170.50099">Left handle</tspan></text>
+    <text
+       style="text-align:center;text-anchor:middle"
+       x="124.64838"
+       y="4"
+       id="text246"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle"
+         id="tspan244"
+         y="199"
+         x="623.40936">Right handle</tspan></text>
+    <text
+       style="text-align:center;text-anchor:middle;fill:#000000"
+       y="16.166092"
+       x="82.718773"
+       id="text250"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle;fill:#000000"
+         id="tspan248"
+         font-size="18px"
+         fill="#ffffff"
+         y="158.16611"
+         x="394.96045">Strip</tspan></text>
+    <text
+       y="-33.767952"
+       x="-64.220154"
+       id="text254"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         id="tspan252"
+         fill="#ffffff"
+         y="128.23206"
+         x="185.77983">Name: Full Path | Total Frames</tspan></text>
+    <rect
+       y="108.05855"
+       x="159.04144"
+       height="70.941452"
+       width="16.958557"
+       id="left_handle"
+       style="opacity:0.3;fill:#000000;stroke-width:1.10268" />
+    <use
+       height="100%"
+       width="100%"
+       transform="matrix(-1,0,0,1,789.86743,-0.73097992)"
+       id="right_handle"
+       xlink:href="#left_handle"
+       y="0"
+       x="0" />
+  </g>
+  <g
+     id="gContent">
+    <path
+       d="M 20,40.863569 H 670 V 70.00495 H 20 Z m 60,0 V 70.00495 m 430,0 V 40.863569"
+       id="content"
+       style="fill:none;stroke:#333333;stroke-width:2" />
+    <text
+       style="text-align:center;text-anchor:middle"
+       y="-1.2382951"
+       x="59.255718"
+       id="text218"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle"
+         id="tspan216"
+         y="31.761705"
+         x="77.798203">Hold start</tspan></text>
+    <text
+       style="text-align:center;text-anchor:middle"
+       y="-2.1018434"
+       x="47.895725"
+       id="text222"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle"
+         id="tspan220"
+         y="30.898159"
+         x="506.99802">Hold end</tspan></text>
+    <text
+       style="text-align:center;text-anchor:middle"
+       y="0"
+       x="98.532219"
+       id="text226"
+       font-family="Arial, sans-serif"
+       font-size="15px"><tspan
+         style="text-align:center;text-anchor:middle"
+         id="tspan224"
+         y="60"
+         x="344.67773">Content</tspan></text>
+  </g>
+</svg>
