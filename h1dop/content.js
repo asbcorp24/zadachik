@@ -1900,3 +1900,323 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 
     });
+
+function toBase64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+function fromBase64(str) {
+    return decodeURIComponent(escape(atob(str)));
+}
+// При клике на иконку создаём модальное окно в текущей вкладке
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "openTestModal") {
+        createTestModal();
+    }
+});
+
+// Вставить тест на страницу
+function insertTest(b64) {
+    const container = document.createElement('div');
+    container.className = 'test';
+    container.dataset.test = b64;
+    document.body.appendChild(container);
+    if (!document.getElementById('test-styles')) {
+        const style = document.createElement('style');
+        style.id = 'test-styles';
+        style.textContent = `
+      .test {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin: 20px auto;
+        width: 90%;
+        max-width: 600px;
+        font-family: sans-serif;
+      }
+      .test h3 {
+        margin-top: 0;
+      }
+      .answer-list label {
+        display: flex;
+        align-items: center;
+        background: #eaeaea;
+        border-radius: 4px;
+        padding: 8px;
+        margin-bottom: 6px;
+        cursor: pointer;
+      }
+      .answer-list label:hover {
+        background: #d4e0e0;
+      }
+      .answer-list input[type="checkbox"] {
+        margin-right: 8px;
+      }
+      .test button {
+        margin-top: 10px;
+        background: #4CAF50;
+        color: #fff;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .test button:hover {
+        background: #45a049;
+      }
+    `;
+        document.head.appendChild(style);
+    }
+// создаём скрипт прямо в страницу
+    const script = document.createElement('script');
+    script.textContent = `
+(function() {
+  function renderTestRunner(container) {
+    const data = JSON.parse(decodeURIComponent(escape(window.atob(container.dataset.test))));
+    container.innerHTML = '';
+    const title = document.createElement('h3');
+    title.innerText = 'Пройдите тест';
+    container.appendChild(title);
+
+    const form = document.createElement('form');
+    data.questions.forEach((q, i) => {
+      const qCard = document.createElement('div');
+      const qText = document.createElement('p');
+      qText.innerText = q.question;
+      qCard.appendChild(qText);
+
+      q.answers.forEach((ans, j) => {
+        const label = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.name = 'q' + i;
+        cb.value = j;
+        label.append(cb, document.createTextNode(ans));
+        qCard.appendChild(label);
+      });
+
+      form.appendChild(qCard);
+    });
+
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'button';
+    submitBtn.innerText = 'Проверить';
+    submitBtn.addEventListener('click', function() {
+      let score = 0;
+      data.questions.forEach((q, i) => {
+        const selected = Array.from(form.querySelectorAll('input[name="q' + i + '"]:checked'))
+                               .map(inp => parseInt(inp.value))
+                               .sort((a,b) => a-b);
+        const correct = q.correct.slice().sort((a,b) => a-b);
+        if (selected.length === correct.length && selected.every((v,idx) => v === correct[idx])) {
+          score++;
+        }
+      });
+      alert('Правильных ответов: ' + score + ' из ' + data.questions.length);
+    });
+
+    form.appendChild(submitBtn);
+    container.appendChild(form);
+  }
+  document.querySelectorAll('.test').forEach(renderTestRunner);
+})();
+`;
+    document.body.appendChild(script);
+    renderTestRunner(container);
+}
+
+// Рендер прохождения теста
+function renderTestRunner(container) {
+    container.innerHTML = '';
+    const data = JSON.parse(atob(container.dataset.test));
+
+    const title = document.createElement('h3');
+    title.innerText = 'Пройдите тест';
+    container.appendChild(title);
+
+    const form = document.createElement('form');
+    data.questions.forEach((q, i) => {
+        const qCard = document.createElement('div');
+        const qText = document.createElement('p');
+        qText.innerText = q.question;
+        qCard.appendChild(qText);
+
+        q.answers.forEach((ans, j) => {
+            const label = document.createElement('label');
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.name = `q${i}`;
+            cb.value = j;
+            label.append(cb, document.createTextNode(ans));
+            qCard.appendChild(label);
+        });
+
+        form.appendChild(qCard);
+    });
+
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'button';
+    submitBtn.innerText = 'Проверить';
+    submitBtn.addEventListener('click', () => {
+        let score = 0;
+        data.questions.forEach((q, i) => {
+            const selected = Array.from(form.querySelectorAll(`input[name="q${i}"]:checked`)).map(el => parseInt(el.value)).sort();
+            const correct = q.correct.slice().sort();
+            if (selected.length === correct.length && selected.every((v, idx) => v === correct[idx])) {
+                score++;
+            }
+        });
+        alert(`Правильных ответов: ${score} из ${data.questions.length}`);
+    });
+
+    form.appendChild(submitBtn);
+    container.appendChild(form);
+}
+
+// Создание модального окна создания теста
+
+function injectModalStyles() {
+    if (document.getElementById('test-modal-styles')) return; // чтобы не вставлять дважды
+
+    const style = document.createElement('style');
+    style.id = 'test-modal-styles';
+    style.textContent = `
+    #test-modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #test-modal .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90%;
+      overflow-y: auto;
+      font-family: sans-serif;
+      background: #f4f7f6;
+    }
+    #test-modal h2 {
+      font-size: 20px;
+    }
+    .question-block {
+      margin-bottom: 16px;
+    }
+    .answers-block label {
+      display: flex;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .answers-block input[type="text"] {
+      flex: 1;
+      padding: 6px;
+      margin-right: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #test-modal button {
+      background: #2196F3;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      margin: 10px 5px 0 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #test-modal button:hover {
+      background: #1976D2;
+    }
+  `;
+    document.head.appendChild(style);
+}
+
+function createTestModal() {
+    injectModalStyles(); // подключить стили
+
+    if (document.getElementById('test-modal')) return; // Если уже открыто
+
+    const modal = document.createElement('div');
+    modal.id = 'test-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.background = 'rgba(0,0,0,0.6)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+
+    const modalContent = document.createElement('div');
+    modalContent.style.background = '#fff';
+    modalContent.style.padding = '20px';
+    modalContent.style.borderRadius = '8px';
+    modalContent.style.width = '90%';
+    modalContent.style.maxWidth = '600px';
+    modalContent.style.maxHeight = '90%';
+    modalContent.style.overflowY = 'auto';
+
+    modalContent.innerHTML = `
+    <h2>Создать новый тест</h2>
+    <div id="questions-container"></div>
+    <button id="add-question-btn">Добавить вопрос</button>
+    <button id="save-test-btn">Сохранить тест</button>
+    <button id="close-test-btn">Отмена</button>
+  `;
+
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    let questionCount = 0;
+
+    document.getElementById('add-question-btn').addEventListener('click', () => {
+        questionCount++;
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question-block';
+        qDiv.innerHTML = `
+      <label>Вопрос ${questionCount}: <input type="text" name="question" placeholder="Текст вопроса"></label>
+      <div class="answers-block">
+        ${Array(4).fill(0).map((_,i) => `
+          <label>
+            <input type="text" name="answer" placeholder="Ответ ${i+1}">
+            <input type="checkbox" name="correct-${questionCount}" value="${i}"> Правильный
+          </label>
+        `).join('')}
+      </div>
+    `;
+        document.getElementById('questions-container').appendChild(qDiv);
+    });
+
+    document.getElementById('save-test-btn').addEventListener('click', () => {
+        const testData = { questions: [] };
+        const blocks = document.querySelectorAll('.question-block');
+
+        blocks.forEach((qb, idx) => {
+            const qText = qb.querySelector('input[name="question"]').value.trim();
+            const answers = Array.from(qb.querySelectorAll('input[name="answer"]')).map(a => a.value.trim());
+            const correct = Array.from(qb.querySelectorAll(`input[name="correct-${idx+1}"]:checked`)).map(c => parseInt(c.value));
+
+            testData.questions.push({ question: qText, answers, correct });
+        });
+
+        const b64 = toBase64(JSON.stringify(testData));
+        insertTest(b64);
+        document.body.removeChild(modal);
+    });
+
+    document.getElementById('close-test-btn').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+}
+
+// При клике на иконку отправляем сообщение в контент-скрипт
+
