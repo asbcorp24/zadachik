@@ -1,3 +1,4 @@
+let savedRange = null;
 function wrapSelectedText() {
 	
     const selection = window.getSelection();
@@ -1913,29 +1914,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         createTestModal();
     }
 });
-
+function saveSelection() {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        savedRange = selection.getRangeAt(0).cloneRange();
+    }
+}
 // Вставить тест на страницу
 function insertTest(b64) {
-    const container = document.createElement('div');
-    container.className = 'test';
-    container.dataset.test = b64;
-    document.body.appendChild(container);
     if (!document.getElementById('test-styles')) {
         const style = document.createElement('style');
         style.id = 'test-styles';
         style.textContent = `
-      .test {
+      details.test-wrapper {
         background: #fff;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        padding: 20px;
+        padding: 10px 15px;
         margin: 20px auto;
         width: 90%;
         max-width: 600px;
         font-family: sans-serif;
       }
-      .test h3 {
-        margin-top: 0;
+      summary {
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .test {
+        margin-top: 10px;
       }
       .answer-list label {
         display: flex;
@@ -1968,10 +1976,26 @@ function insertTest(b64) {
     `;
         document.head.appendChild(style);
     }
-// создаём скрипт прямо в страницу
+
+    // Создаем <details> и <summary>
+    const details = document.createElement('details');
+    details.className = 'test-wrapper';
+
+    const summary = document.createElement('summary');
+    summary.innerText = 'Тест: Пройдите задание';
+    details.appendChild(summary);
+
+    const container = document.createElement('div');
+    container.className = 'test';
+    container.dataset.test = b64;
+    details.appendChild(container);
+
+    replaceSelectedTextWith(details);
+
+    // Генерируем скрипт оживления
     const script = document.createElement('script');
     script.textContent = `
-(function() {
+(function(){
   function renderTestRunner(container) {
     const data = JSON.parse(decodeURIComponent(escape(window.atob(container.dataset.test))));
     container.innerHTML = '';
@@ -1980,22 +2004,26 @@ function insertTest(b64) {
     container.appendChild(title);
 
     const form = document.createElement('form');
-    data.questions.forEach((q, i) => {
+    data.questions.forEach(function(q, i) {
       const qCard = document.createElement('div');
       const qText = document.createElement('p');
       qText.innerText = q.question;
       qCard.appendChild(qText);
 
-      q.answers.forEach((ans, j) => {
+      const ansList = document.createElement('div');
+      ansList.className = 'answer-list';
+
+      q.answers.forEach(function(ans, j) {
         const label = document.createElement('label');
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.name = 'q' + i;
         cb.value = j;
         label.append(cb, document.createTextNode(ans));
-        qCard.appendChild(label);
+        ansList.appendChild(label);
       });
 
+      qCard.appendChild(ansList);
       form.appendChild(qCard);
     });
 
@@ -2004,28 +2032,66 @@ function insertTest(b64) {
     submitBtn.innerText = 'Проверить';
     submitBtn.addEventListener('click', function() {
       let score = 0;
-      data.questions.forEach((q, i) => {
+      const results = [];
+
+      data.questions.forEach(function(q, i) {
         const selected = Array.from(form.querySelectorAll('input[name="q' + i + '"]:checked'))
-                               .map(inp => parseInt(inp.value))
-                               .sort((a,b) => a-b);
-        const correct = q.correct.slice().sort((a,b) => a-b);
-        if (selected.length === correct.length && selected.every((v,idx) => v === correct[idx])) {
+                              .map(function(inp) { return parseInt(inp.value); })
+                              .sort(function(a,b){ return a-b; });
+        const correct = q.correct.slice().sort(function(a,b){ return a-b; });
+        const isCorrect = selected.length === correct.length && selected.every(function(v,idx){ return v === correct[idx]; });
+
+        if (isCorrect) {
           score++;
         }
+        results.push({
+          question: q.question,
+          correctAnswers: q.correct.map(function(idx) { return q.answers[idx]; })
+        });
       });
-      alert('Правильных ответов: ' + score + ' из ' + data.questions.length);
+
+      // После прохождения теста: показываем результат
+      container.innerHTML = '';
+      const summary = document.createElement('div');
+      summary.innerHTML = '<h3>Результат теста</h3>' +
+                          '<p>Вы правильно ответили на <b>' + score + '</b> из <b>' + data.questions.length + '</b> вопросов.</p>';
+
+      const list = document.createElement('ul');
+      results.forEach(function(res) {
+        const item = document.createElement('li');
+        item.innerHTML = '<b>' + res.question + '</b><br>Правильные ответы: ' + res.correctAnswers.join(', ');
+        list.appendChild(item);
+      });
+
+      summary.appendChild(list);
+      container.appendChild(summary);
     });
 
     form.appendChild(submitBtn);
     container.appendChild(form);
   }
-  document.querySelectorAll('.test').forEach(renderTestRunner);
+  document.querySelectorAll('.test').forEach(function(container) {
+    renderTestRunner(container);
+  });
 })();
 `;
     document.body.appendChild(script);
-    renderTestRunner(container);
 }
 
+function replaceSelectedTextWith(node) {
+    if (!savedRange) {
+        alert('Нет сохранённого выделения! Выделите текст перед созданием теста.');
+        return;
+    }
+
+    savedRange.deleteContents();
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(node);
+    savedRange.insertNode(fragment);
+
+    // После вставки очищаем сохранённое выделение
+    savedRange = null;
+}
 // Рендер прохождения теста
 function renderTestRunner(container) {
     container.innerHTML = '';
@@ -2139,6 +2205,7 @@ function injectModalStyles() {
 }
 
 function createTestModal() {
+    saveSelection();
     injectModalStyles(); // подключить стили
 
     if (document.getElementById('test-modal')) return; // Если уже открыто
