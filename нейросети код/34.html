@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Метрики классификации «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.5;
+    }
+    h1, h2 { text-align: center; }
+    table { border-collapse: collapse; margin: 10px auto; }
+    th, td {
+      border: 1px solid #888;
+      padding: 6px 12px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .section { margin-bottom: 30px; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .controls label {
+      font-size: 0.95rem;
+    }
+    .controls input, .controls button {
+      padding: 6px 10px;
+      font-size: 1rem;
+    }
+    #log, #logAUC {
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+      margin: 10px;
+    }
+    #rocCanvas {
+      display: block;
+      margin: 0 auto 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Метрики классификации «для дурачков»</h1>
+
+  <div class="section">
+    <h2>1. Введите значения из confusion matrix</h2>
+    <div class="controls">
+      <label>TP (True Positives): <input type="number" id="tp" value="30" min="0"></label>
+      <label>FP (False Positives): <input type="number" id="fp" value="20" min="0"></label>
+      <label>TN (True Negatives): <input type="number" id="tn" value="50" min="0"></label>
+      <label>FN (False Negatives): <input type="number" id="fn" value="10" min="0"></label>
+    </div>
+    <div class="controls">
+      <button id="computeMetrics">Вычислить метрики</button>
+      <button id="resetMetrics">Сбросить</button>
+    </div>
+    <table id="cmTable">
+      <tr><th></th><th>Предсказано 1</th><th>Предсказано 0</th></tr>
+      <tr><th>Истинно 1</th><td id="cmTP">30</td><td id="cmFN">10</td></tr>
+      <tr><th>Истинно 0</th><td id="cmFP">20</td><td id="cmTN">50</td></tr>
+    </table>
+    <div id="log">Журнал расчётов: нажмите «Вычислить метрики». 🎯🐲⚡️</div>
+  </div>
+
+  <div class="section">
+    <h2>2. ROC-AUC (пример) 📈</h2>
+    <canvas id="rocCanvas" width="300" height="300"></canvas>
+    <div class="controls">
+      <button id="computeAUC">Вычислить AUC</button>
+      <button id="resetAUC">Сбросить ROC</button>
+    </div>
+    <div id="logAUC">Журнал ROC-AUC: нажмите «Вычислить AUC». 🎯</div>
+  </div>
+
+<script>
+  // ===== Метрики из confusion matrix =====
+  const tpIn = document.getElementById('tp'),
+        fpIn = document.getElementById('fp'),
+        tnIn = document.getElementById('tn'),
+        fnIn = document.getElementById('fn'),
+        cmTP = document.getElementById('cmTP'),
+        cmFP = document.getElementById('cmFP'),
+        cmTN = document.getElementById('cmTN'),
+        cmFN = document.getElementById('cmFN'),
+        log    = document.getElementById('log'),
+        btnCalc= document.getElementById('computeMetrics'),
+        btnResetM = document.getElementById('resetMetrics');
+
+  function resetMetrics(){
+    tpIn.value = 30; fpIn.value = 20; tnIn.value = 50; fnIn.value = 10;
+    cmTP.textContent = tpIn.value; cmFP.textContent = fpIn.value;
+    cmTN.textContent = tnIn.value; cmFN.textContent = fnIn.value;
+    log.textContent = 'Журнал расчётов: нажмите «Вычислить метрики». 🎯🐲⚡️';
+  }
+  btnResetM.onclick = resetMetrics;
+  resetMetrics();
+
+  btnCalc.onclick = ()=>{
+    const TP = +tpIn.value,
+          FP = +fpIn.value,
+          TN = +tnIn.value,
+          FN = +fnIn.value;
+    cmTP.textContent = TP; cmFP.textContent = FP;
+    cmTN.textContent = TN; cmFN.textContent = FN;
+
+    const total = TP+FP+TN+FN;
+    let text = `Всего примеров = TP+FP+TN+FN = ${TP}+${FP}+${TN}+${FN} = ${total}\n\n`;
+
+    // Accuracy
+    const acc = (TP+TN)/total;
+    text += `1) Accuracy = (TP+TN)/Всего = (${TP}+${TN})/${total} = ${acc.toFixed(4)}\n\n`;
+
+    // Precision
+    const prec = TP/(TP+FP);
+    text += `2) Precision = TP/(TP+FP) = ${TP}/(${TP}+${FP}) = ${prec.toFixed(4)}\n\n`;
+
+    // Recall
+    const rec = TP/(TP+FN);
+    text += `3) Recall = TP/(TP+FN) = ${TP}/(${TP}+${FN}) = ${rec.toFixed(4)}\n\n`;
+
+    // F1
+    const f1 = 2 * (prec*rec) / (prec+rec);
+    text += `4) F1-score = 2·(P·R)/(P+R) = 2·(${prec.toFixed(4)}·${rec.toFixed(4)})/(${prec.toFixed(4)}+${rec.toFixed(4)}) = ${f1.toFixed(4)}`;
+
+    log.textContent = text;
+  };
+
+  // ===== ROC-AUC демонстрация =====
+  const rocCanvas = document.getElementById('rocCanvas'),
+        ctx = rocCanvas.getContext('2d'),
+        logAUC = document.getElementById('logAUC'),
+        btnAUC = document.getElementById('computeAUC'),
+        btnResetA = document.getElementById('resetAUC');
+
+  // пример ROC-точек
+  const rocPoints = [
+    {fpr:0.0, tpr:0.0},
+    {fpr:0.1, tpr:0.7},
+    {fpr:0.3, tpr:0.85},
+    {fpr:1.0, tpr:1.0}
+  ];
+
+  function drawROC(){
+    ctx.clearRect(0,0,300,300);
+    // оси
+    ctx.strokeStyle='#888';
+    ctx.beginPath();
+    ctx.moveTo(30,270); ctx.lineTo(270,270); // X
+    ctx.moveTo(30,270); ctx.lineTo(30,30);   // Y
+    ctx.stroke();
+    // метки
+    ctx.fillStyle='#000'; ctx.font='12px sans-serif';
+    ctx.fillText('FPR →', 240, 290);
+    ctx.fillText('↑ TPR', 5, 50);
+    // кривая
+    ctx.strokeStyle='#D62828'; ctx.lineWidth=2;
+    ctx.beginPath();
+    rocPoints.forEach((p,i)=>{
+      const x = 30 + p.fpr*240, y = 270 - p.tpr*240;
+      i===0? ctx.moveTo(x,y): ctx.lineTo(x,y);
+      // точка
+      ctx.fillStyle='#007ACC';
+      ctx.beginPath();
+      ctx.arc(x,y,4,0,2*Math.PI);
+      ctx.fill();
+    });
+    ctx.stroke();
+  }
+  drawROC();
+
+  btnAUC.onclick = ()=>{
+    let auc = 0, logt = 'Расчёт AUC по точкам (трапеции):\n';
+    for(let i=1;i<rocPoints.length;i++){
+      const x0 = rocPoints[i-1].fpr, y0 = rocPoints[i-1].tpr;
+      const x1 = rocPoints[i].fpr,   y1 = rocPoints[i].tpr;
+      const width = x1 - x0;
+      const trapArea = width * (y0 + y1)/2;
+      logt += `  Трапеция ${i}: Δx=(${x1}-${x0})=${width.toFixed(2)}, `+
+              `(y0+y1)/2=(${y0.toFixed(2)}+${y1.toFixed(2)})/2=${((y0+y1)/2).toFixed(2)} `+
+              `→ area=${trapArea.toFixed(4)}\n`;
+      auc += trapArea;
+    }
+    logt += `\nAUC = сумма = ${auc.toFixed(4)} (максимум 1.0)`;
+    logAUC.textContent = logt;
+  };
+
+  btnResetA.onclick = ()=>{
+    drawROC();
+    logAUC.textContent = 'Журнал ROC-AUC: нажмите «Вычислить AUC». 🎯';
+  };
+</script>
+
+</body>
+</html>

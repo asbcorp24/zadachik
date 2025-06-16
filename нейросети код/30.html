@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Ансамбли моделей: Random Forest и Boosting</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    #canvas { display: block; margin: 0 auto 20px; border: 1px solid #ccc; background: #fff; }
+    .controls { text-align: center; margin-bottom: 15px; }
+    .controls button { margin: 0 8px; padding: 6px 12px; font-size: 1rem; }
+    #log { background: #f5f5f5; padding: 10px; border-radius: 4px; border: 1px solid #ddd; 
+           font-family: monospace; white-space: pre-line; max-height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+  <h1>Ансамбли моделей «для дурачков»</h1>
+  <p style="text-align:center;">Много слабых экспертов → вместе они сильнее! 🧑‍⚖️👨‍🏫👩‍🔬👨‍🔧 ➔ 🧠</p>
+
+  <h2>1. Random Forest (3 решения «пенька») 🌳🌳🌳</h2>
+  <canvas id="canvas" width="600" height="400"></canvas>
+  <div class="controls">
+    <button id="gen">Сгенерировать данные</button>
+    <button id="rfStep" disabled>Шаг RF: добавить "пень"</button>
+    <button id="rfVote" disabled>Голосование</button>
+    <button id="rfReset" disabled>Сброс RF</button>
+  </div>
+  <div id="log">Журнал RF: жми «Сгенерировать данные».</div>
+
+  <h2>2. Gradient Boosting (последовательные исправления) 🚲</h2>
+  <canvas id="canvas2" width="600" height="400"></canvas>
+  <div class="controls">
+    <button id="gbStep1" disabled>Шаг GB: первый "пень"</button>
+    <button id="gbStep2" disabled>Шаг GB: второй "пень"</button>
+    <button id="gbStep3" disabled>Шаг GB: третий "пень"</button>
+    <button id="gbReset" disabled>Сброс GB</button>
+  </div>
+  <div id="log2">Журнал GB: сперва запусти RF, тогда можно начать GB.</div>
+
+<script>
+  // Утилиты
+  function rand(a,b){return Math.random()*(b-a)+a;}
+  function sign(x){return x>=0?1:0;}
+
+  // Общие данные
+  const N = 60;
+  let data = [];   // {x,y,label}
+  const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+  const log = document.getElementById('log');
+  // RF
+  let rfStumps = [], rfPreds = []; // each stump: {axis:'x'|'y', thresh}, rfPreds: [ [pred by stump0,...], ... ]
+  // GB
+  const canvas2 = document.getElementById('canvas2'), ctx2 = canvas2.getContext('2d');
+  const log2 = document.getElementById('log2');
+  let residuals=[], gbModels=[]; // gbModels: same stump structure, residuals updated
+
+  // Рисуем точки, цвет по метке
+  function drawData(ctx, arr, preds=null){
+    ctx.clearRect(0,0,600,400);
+    arr.forEach((p,i)=>{
+      const c0 = p.label? '#e63946':'#2a9d8f';
+      const c = preds ? (preds[i]? '#e63946':'#2a9d8f') : c0;
+      ctx.fillStyle = c;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,5,0,2*Math.PI);
+      ctx.fill();
+    });
+  }
+
+  // Генерация данных: 2 кластера
+  document.getElementById('gen').onclick = ()=>{
+    data = [];
+    // кластер 0: слева
+    for(let i=0;i<N/2;i++){
+      data.push({x:rand(20,280), y:rand(20,380), label:0});
+    }
+    // кластер 1: справа
+    for(let i=0;i<N/2;i++){
+      data.push({x:rand(320,580), y:rand(20,380), label:1});
+    }
+    rfStumps=[]; rfPreds=[];
+    drawData(ctx, data);
+    log.textContent = `Данные сгенерированы: ${N} точек, два кластера.\n`+
+                      `Шаг RF: нажми "Шаг RF: добавить 'пень'".`;
+    document.getElementById('rfStep').disabled = false;
+    document.getElementById('rfVote').disabled = true;
+    document.getElementById('rfReset').disabled = false;
+    // GB тоже инициализируем
+    residuals = data.map(p=> p.label - 0.5); // начальные residuals для GB
+    gbModels = [];
+    drawData(ctx2, data);
+    log2.textContent = 'Журнал GB: сперва RF (деревья) не влияет на GB, но можно сразу нажать "GB Step1".';
+    document.getElementById('gbStep1').disabled = false;
+    document.getElementById('gbStep2').disabled = true;
+    document.getElementById('gbStep3').disabled = true;
+    document.getElementById('gbReset').disabled = false;
+  };
+
+  // Создать простой stump: ищем лучшее пороговое разделение по x или y
+  function fitStump(resids){
+    // пробуем axis x и y, thresholds = середины соседних sorted
+    let best = {axis:'x', thresh:0, err:Infinity, predL:0, predR:1};
+    ['x','y'].forEach(axis=>{
+      // сортируем по axis
+      const sorted = data.slice().sort((a,b)=>a[axis]-b[axis]);
+      for(let i=1;i<sorted.length;i++){
+        const t = (sorted[i-1][axis]+sorted[i][axis])/2;
+        // проверяем порог
+        let err = 0;
+        sorted.forEach(p=>{
+          const pred = p[axis]<t? 0:1;
+          // для RF stump будет обычная классификация, для GB stump будет предсказание residual sign
+          // здесь для GB residuals мы хотим предсказать residuals (regressor), но упрощаем:
+          err += Math.pow((pred - (resids? resids[data.indexOf(p)] : p.label)), 2);
+        });
+        if(err<best.err){
+          best = {axis, thresh: t, err};
+        }
+      }
+    });
+    return best;
+  }
+
+  // RF: добавляем random stump (просто random axis+threshold)
+  document.getElementById('rfStep').onclick = ()=>{
+    const axis = Math.random()<0.5?'x':'y';
+    const thresh = rand(50,550);
+    const stump = {axis, thresh};
+    rfStumps.push(stump);
+    // предсказания
+    const preds = data.map(p=> p[axis]<thresh?0:1);
+    rfPreds.push(preds);
+    drawData(ctx, data);
+    log.textContent += 
+      `\nДерево ${rfStumps.length}: stump по ${axis.toUpperCase()}<${thresh.toFixed(1)} `+
+      `(предсказали [${preds.filter(x=>x==1).length} единиц])`;
+    if(rfStumps.length>=3){
+      document.getElementById('rfStep').disabled = true;
+      document.getElementById('rfVote').disabled = false;
+      log.textContent += `\n\nТеперь нажми "Голосование" — Majority Vote.`;
+    }
+  };
+
+  // RF: majority vote
+  document.getElementById('rfVote').onclick = ()=>{
+    // для каждой точки считаем сумму предсказаний
+    const final = data.map((_,i)=>{
+      const sum = rfPreds.reduce((s,p)=>s+p[i],0);
+      return sum>=Math.ceil(rfStumps.length/2)?1:0;
+    });
+    drawData(ctx, data, final);
+    log.textContent += `\n\nГолосование завершено. Ошибка RF: `+
+      `${final.filter((p,i)=>p!==data[i].label).length}/${N} ошибок.`;
+    document.getElementById('rfVote').disabled = true;
+  };
+
+  document.getElementById('rfReset').onclick = ()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    log.textContent = 'Журнал RF: жми «Сгенерировать данные».';
+    rfStumps=[]; rfPreds=[];
+    document.getElementById('rfStep').disabled = true;
+    document.getElementById('rfVote').disabled = true;
+    document.getElementById('rfReset').disabled = true;
+  };
+
+  // === Gradient Boosting Demo ===
+
+  // Один шаг бустинга: fit stump на residuals
+  function gbStep(){
+    const stump = fitStump(residuals);
+    gbModels.push(stump);
+    // предсказание stump
+    const preds = data.map(p=> p[stump.axis] < stump.thresh? 0:1);
+    // обновляем residuals (упрощаем для демо): residual = residual - learning_rate*(preds - 0.5)
+    const lr = 0.5;
+    residuals = residuals.map((r,i)=> r - lr*(preds[i]-0.5));
+    // итоговая агрегация: sum(preds_i*lr)
+    const agg = data.map((_,i)=>{
+      return gbModels.reduce((s,m,j)=>{
+        const pr = data[i][m.axis]<m.thresh?0:1;
+        return s + lr*(pr-0.5); // центрируем вокруг 0
+      },0) >= 0? 1:0;
+    });
+    return {stump, preds, agg};
+  }
+
+  document.getElementById('gbStep1').onclick = ()=>{
+    const {stump,preds,agg} = gbStep();
+    drawData(ctx2,data,agg);
+    log2.textContent += 
+      `Шаг 1: построили stump по ${stump.axis}<${stump.thresh.toFixed(1)}> `+
+      `(err≈${stump.err.toFixed(1)})\n`+
+      `  + агрегация → ошибок ${agg.filter((p,i)=>p!==data[i].label).length}/${N}\n\n`;
+    document.getElementById('gbStep1').disabled = true;
+    document.getElementById('gbStep2').disabled = false;
+  };
+  document.getElementById('gbStep2').onclick = ()=>{
+    const {stump,preds,agg} = gbStep();
+    drawData(ctx2,data,agg);
+    log2.textContent += 
+      `Шаг 2: добавили stump по ${stump.axis}<${stump.thresh.toFixed(1)}> `+
+      `(err≈${stump.err.toFixed(1)})\n`+
+      `  + агрегация → ошибок ${agg.filter((p,i)=>p!==data[i].label).length}/${N}\n\n`;
+    document.getElementById('gbStep2').disabled = true;
+    document.getElementById('gbStep3').disabled = false;
+  };
+  document.getElementById('gbStep3').onclick = ()=>{
+    const {stump,preds,agg} = gbStep();
+    drawData(ctx2,data,agg);
+    log2.textContent += 
+      `Шаг 3: добавили stump по ${stump.axis}<${stump.thresh.toFixed(1)}> `+
+      `(err≈${stump.err.toFixed(1)})\n`+
+      `  + финальная агрегация → ошибок ${agg.filter((p,i)=>p!==data[i].label).length}/${N}\n\n`+
+      `GB завершён: последовательно исправляли ошибки!`;
+    document.getElementById('gbStep3').disabled = true;
+  };
+  document.getElementById('gbReset').onclick = ()=>{
+    ctx2.clearRect(0,0,canvas2.width,canvas2.height);
+    log2.textContent = 'Журнал GB: сперва RF (или сразу) — можно нажать "GB Step1".';
+    residuals = data.map(p=>p.label - 0.5);
+    gbModels = [];
+    document.getElementById('gbStep1').disabled = false;
+    document.getElementById('gbStep2').disabled = true;
+    document.getElementById('gbStep3').disabled = true;
+    document.getElementById('gbReset').disabled = false;
+  };
+</script>
+
+</body>
+</html>

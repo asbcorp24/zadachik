@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Reinforcement Learning Demo «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    .section {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls select, .controls button {
+      font-size: 1rem;
+      padding: 6px 12px;
+      margin: 0 8px;
+    }
+    #log {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Reinforcement Learning (Q-learning)</h1>
+  <p style="text-align:center;">🐶✨🍖❌ — агент учится через награды и штрафы</p>
+
+  <div class="section">
+    <h2>Окружение и действия</h2>
+    <p>Состояние: <strong>Щенок видит мячик</strong></p>
+    <p>Доступные действия:</p>
+    <ul>
+      <li><strong>Fetch</strong> – приносит мячик (награждаем +2)</li>
+      <li><strong>Sit</strong> – садится (награждаем +1)</li>
+      <li><strong>Bark</strong> – лает без причины (штраф −1)</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Q-таблица</h2>
+    <table>
+      <tr><th>Действие</th><th>Q(s,a)</th></tr>
+      <tr><td>Fetch</td><td id="q-fetch">0.00</td></tr>
+      <tr><td>Sit</td><td id="q-sit">0.00</td></tr>
+      <tr><td>Bark</td><td id="q-bark">0.00</td></tr>
+    </table>
+    <div class="controls">
+      <label>Выбрать действие:
+        <select id="actionSelect">
+          <option value="fetch">Fetch</option>
+          <option value="sit">Sit</option>
+          <option value="bark">Bark</option>
+        </select>
+      </label>
+      <button id="stepButton">Выполнить шаг</button>
+      <button id="resetButton">Сбросить</button>
+    </div>
+    <div id="log">
+      Журнал: нажмите «Выполнить шаг» для первого действия.
+    </div>
+  </div>
+
+<script>
+  // Параметры Q-learning
+  const alpha = 0.1;      // скорость обучения
+  const gamma = 0.9;      // фактор дисконтирования
+
+  // Инициализация Q-значений
+  let Q = { fetch: 0, sit: 0, bark: 0 };
+  let stepCount = 0;
+
+  // DOM элементы
+  const qFetch = document.getElementById('q-fetch');
+  const qSit   = document.getElementById('q-sit');
+  const qBark  = document.getElementById('q-bark');
+  const actionSelect = document.getElementById('actionSelect');
+  const stepButton   = document.getElementById('stepButton');
+  const resetButton  = document.getElementById('resetButton');
+  const logEl        = document.getElementById('log');
+
+  function updateTable() {
+    qFetch.textContent = Q.fetch.toFixed(2);
+    qSit.textContent   = Q.sit.toFixed(2);
+    qBark.textContent  = Q.bark.toFixed(2);
+  }
+
+  function log(msg) {
+    logEl.textContent = msg + '\n\n' + logEl.textContent;
+  }
+
+  // Функция вознаграждения
+  function getReward(action) {
+    if (action === 'fetch') return 2;
+    if (action === 'sit')   return 1;
+    if (action === 'bark')  return -1;
+    return 0;
+  }
+
+  // Выполнить один шаг Q-learning
+  stepButton.onclick = () => {
+    const action = actionSelect.value;
+    stepCount++;
+    const oldQ = Q[action];
+    const reward = getReward(action);
+    // одно состояние, значит max_a' Q(s,a') = max of current Q
+    const maxQNext = Math.max(Q.fetch, Q.sit, Q.bark);
+    // Обновление Q
+    const target = reward + gamma * maxQNext;
+    const newQ = oldQ + alpha * (target - oldQ);
+    Q[action] = newQ;
+
+    // Лог с промежуточными расчетами
+    let msg = `Шаг ${stepCount} — действие: ${action.toUpperCase()}\n`;
+    msg += `Награда R = ${reward}\n`;
+    msg += `Старое Q = ${oldQ.toFixed(2)}\n`;
+    msg += `Макс следующего Q = max{${Q.fetch.toFixed(2)}, ${Q.sit.toFixed(2)}, ${Q.bark.toFixed(2)}} = ${maxQNext.toFixed(2)}\n`;
+    msg += `Целевая ценность: R + γ·maxQ' = ${reward} + ${gamma}·${maxQNext.toFixed(2)} = ${target.toFixed(2)}\n`;
+    msg += `Обновление: Q_new = Q_old + α·(target - Q_old)\n`;
+    msg += `           = ${oldQ.toFixed(2)} + ${alpha}·(${target.toFixed(2)} - ${oldQ.toFixed(2)}) = ${newQ.toFixed(2)}`;
+
+    updateTable();
+    log(msg);
+  };
+
+  // Сброс всех значений
+  resetButton.onclick = () => {
+    Q = { fetch: 0, sit: 0, bark: 0 };
+    stepCount = 0;
+    updateTable();
+    logEl.textContent = 'Журнал: нажмите «Выполнить шаг» для первого действия.';
+  };
+
+  // Инициализация таблицы
+  updateTable();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Transfer Learning «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 20px;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls button {
+      margin: 0 6px;
+      padding: 6px 12px;
+      font-size: 1rem;
+    }
+    #log {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Transfer Learning: Feature Extractor + New Head</h1>
+  <p style="text-align:center;">
+    📚 Модель уже умеет извлекать признаки (замороженная часть),<br>
+    мы дообучаем только «голову» (новый классификатор) на небольшой выборке.
+  </p>
+
+  <h2>Данные</h2>
+  <p>У нас есть 4 новых примера (x, y) и метки (0 или 1):</p>
+  <table id="dataTable">
+    <tr><th>#</th><th>x</th><th>y</th><th>label</th><th>u=x+y</th><th>v=x−y</th><th>z=w₁u+w₂v+b</th><th>sigmoid(z)</th><th>error=y−pred</th></tr>
+    <!-- Будет заполнено скриптом -->
+  </table>
+
+  <div class="controls">
+    <button id="extractBtn">1. Extract Features</button>
+    <button id="trainBtn" disabled>2. Train Head Step</button>
+    <button id="resetBtn">Сбросить</button>
+  </div>
+
+  <h2>Параметры головы (линейный классификатор)</h2>
+  <p>Вес w₁ = <span id="w1">0.00</span>, w₂ = <span id="w2">0.00</span>, b = <span id="b">0.00</span></p>
+  <p>Learning rate α = 0.1</p>
+
+  <h2>Журнал промежуточных расчётов</h2>
+  <div id="log">Журнал: нажмите «Extract Features», чтобы вычислить u и v.</div>
+
+<script>
+  // Исходные данные
+  const rawData = [
+    {x:1, y:2, label:0},
+    {x:2, y:1, label:0},
+    {x:3, y:3, label:1},
+    {x:4, y:5, label:1}
+  ];
+  let data = [];
+
+  // Параметры головы
+  let w1 = 0, w2 = 0, b = 0;
+  const alpha = 0.1;
+
+  const table = document.getElementById('dataTable');
+  const extractBtn = document.getElementById('extractBtn');
+  const trainBtn   = document.getElementById('trainBtn');
+  const resetBtn   = document.getElementById('resetBtn');
+  const logEl      = document.getElementById('log');
+  const w1Span     = document.getElementById('w1');
+  const w2Span     = document.getElementById('w2');
+  const bSpan      = document.getElementById('b');
+
+  function sigmoid(z){ return 1/(1+Math.exp(-z)); }
+
+  function renderTable() {
+    // Очищаем, кроме заголовка
+    table.innerHTML = `<tr><th>#</th><th>x</th><th>y</th><th>label</th><th>u=x+y</th><th>v=x−y</th><th>z=w₁u+w₂v+b</th><th>sigmoid(z)</th><th>error=y−pred</th></tr>`;
+    data.forEach((p,i)=>{
+      const row = document.createElement('tr');
+      const z = (w1*p.u + w2*p.v + b).toFixed(3);
+      const pred = sigmoid(w1*p.u + w2*p.v + b);
+      const err = (p.label - pred).toFixed(3);
+      row.innerHTML = `
+        <td>${i+1}</td>
+        <td>${p.x}</td>
+        <td>${p.y}</td>
+        <td>${p.label}</td>
+        <td>${p.u.toFixed(2)}</td>
+        <td>${p.v.toFixed(2)}</td>
+        <td>${z}</td>
+        <td>${pred.toFixed(3)}</td>
+        <td>${err}</td>
+      `;
+      table.appendChild(row);
+    });
+  }
+
+  function updateParamsDisplay() {
+    w1Span.textContent = w1.toFixed(3);
+    w2Span.textContent = w2.toFixed(3);
+    bSpan.textContent  = b.toFixed(3);
+  }
+
+  function log(msg) {
+    logEl.textContent = msg + '\n\n' + logEl.textContent;
+  }
+
+  // Сброс
+  resetBtn.onclick = () => {
+    data = [];
+    w1 = 0; w2 = 0; b = 0;
+    updateParamsDisplay();
+    renderTable();
+    logEl.textContent = 'Журнал: нажмите «Extract Features», чтобы начать.';
+    trainBtn.disabled = true;
+  };
+
+  // Extract Features
+  extractBtn.onclick = () => {
+    data = rawData.map(p => ({
+      ...p,
+      u: p.x + p.y,
+      v: p.x - p.y
+    }));
+    renderTable();
+    log(
+      'Шаг 1: Извлекли признаки из предобученного экстрактора:\n' +
+      data.map((p,i)=>`  Пример ${i+1}: u=${p.x}+${p.y}=${p.u}, v=${p.x}-${p.y}=${p.v}`).join('\n')
+    );
+    trainBtn.disabled = false;
+  };
+
+  // Train Head Step
+  trainBtn.onclick = () => {
+    // Для простоты берём один проход по всем примерам (batch=all)
+    let msg = 'Шаг 2: Обучение головы (градиентный шаг):\n';
+    data.forEach((p,i) => {
+      const z = w1*p.u + w2*p.v + b;
+      const pred = sigmoid(z);
+      const error = p.label - pred;
+      // градиенты
+      const gradW1 = error * p.u;
+      const gradW2 = error * p.v;
+      const gradB  = error;
+      msg += `\nПример ${i+1}:\n`;
+      msg += `  z = ${w1.toFixed(3)}·${p.u.toFixed(2)} + ${w2.toFixed(3)}·${p.v.toFixed(2)} + ${b.toFixed(3)} = ${z.toFixed(3)}\n`;
+      msg += `  pred = sigmoid(z) = ${pred.toFixed(3)}\n`;
+      msg += `  error = y - pred = ${p.label} - ${pred.toFixed(3)} = ${error.toFixed(3)}\n`;
+      msg += `  gradW1 = error·u = ${error.toFixed(3)}·${p.u.toFixed(2)} = ${gradW1.toFixed(3)}\n`;
+      msg += `  gradW2 = error·v = ${error.toFixed(3)}·${p.v.toFixed(2)} = ${gradW2.toFixed(3)}\n`;
+      msg += `  gradB  = error = ${gradB.toFixed(3)}\n`;
+      // обновление
+      w1 += alpha * gradW1;
+      w2 += alpha * gradW2;
+      b  += alpha * gradB;
+      msg += `  Обновление:\n`;
+      msg += `    w1_new = w1_old + α·gradW1 = … = ${w1.toFixed(3)}\n`;
+      msg += `    w2_new = … = ${w2.toFixed(3)}\n`;
+      msg += `    b_new  = … = ${b.toFixed(3)}\n`;
+    });
+    updateParamsDisplay();
+    renderTable();
+    log(msg);
+  };
+
+  // Инициализация
+  resetBtn.onclick();
+</script>
+
+</body>
+</html>

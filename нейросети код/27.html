@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо Supervised Learning «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      line-height: 1.4;
+      padding: 0 15px;
+    }
+    h1 { text-align: center; margin-bottom: 10px; }
+    .section {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .section h2 { margin-top: 0; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .controls label {
+      font-size: 0.95rem;
+    }
+    .controls input, .controls select, .controls button {
+      font-size: 1rem;
+      padding: 4px 8px;
+    }
+    #log-class, #log-reg {
+      background: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-family: monospace;
+      white-space: pre-line;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Обучение с учителем (Supervised Learning)</h1>
+  <p>Как в школе: учитель даёт задачу и правильный ответ. Мы решаем, сравниваем, учимся на ошибках. 👨‍🏫✏️✅❌📚</p>
+
+  <div class="section" id="classification-section">
+    <h2>1. Классификация (Classification) 🐱🐶➔📋</h2>
+    <p>Наша простая “сеть” – это логистическая регрессия с одним весом:</p>
+    <div class="controls">
+      <label>Вход x (признак): <input type="range" id="class-x" min="0" max="10" value="5" step="0.1"></label>
+      <span id="class-x-val">5.0</span>
+      <label>Правильная метка y:
+        <select id="class-y">
+          <option value="0">Класс 0</option>
+          <option value="1">Класс 1</option>
+        </select>
+      </label>
+      <label>Вес w: <input type="number" id="class-w" value="0.5" step="0.1"></label>
+      <label>lr: <input type="number" id="class-lr" value="0.1" step="0.01"></label>
+    </div>
+    <div class="controls">
+      <button id="class-forward">Forward Pass</button>
+      <button id="class-loss" disabled>Compute Loss</button>
+      <button id="class-update" disabled>Update Weight</button>
+    </div>
+    <div id="log-class">
+      Журнал классификации: жми “Forward Pass” для старта.
+    </div>
+  </div>
+
+  <div class="section" id="regression-section">
+    <h2>2. Регрессия (Regression) 🏡➔💰</h2>
+    <p>Наша простая “сеть” – линейная регрессия с одним весом и смещением:</p>
+    <div class="controls">
+      <label>Вход x: <input type="range" id="reg-x" min="0" max="10" value="5" step="0.1"></label>
+      <span id="reg-x-val">5.0</span>
+      <label>Правильное y: <input type="range" id="reg-y" min="0" max="10" value="4" step="0.1"></label>
+      <span id="reg-y-val">4.0</span>
+      <label>Вес w: <input type="number" id="reg-w" value="1.0" step="0.1"></label>
+      <label>Bias b: <input type="number" id="reg-b" value="0.0" step="0.1"></label>
+      <label>lr: <input type="number" id="reg-lr" value="0.1" step="0.01"></label>
+    </div>
+    <div class="controls">
+      <button id="reg-predict">Predict</button>
+      <button id="reg-loss" disabled>Compute Loss</button>
+      <button id="reg-update" disabled>Update w,b</button>
+    </div>
+    <div id="log-reg">
+      Журнал регрессии: жми “Predict” для старта.
+    </div>
+  </div>
+
+  <script>
+    // === Classification demo ===
+    const classX    = document.getElementById('class-x');
+    const classXVal = document.getElementById('class-x-val');
+    const classY    = document.getElementById('class-y');
+    const classW    = document.getElementById('class-w');
+    const classLr   = document.getElementById('class-lr');
+    const btnF      = document.getElementById('class-forward');
+    const btnL      = document.getElementById('class-loss');
+    const btnU      = document.getElementById('class-update');
+    const logClass  = document.getElementById('log-class');
+
+    let z, p, yTrue, gradW;
+
+    classX.addEventListener('input', ()=> {
+      classXVal.textContent = parseFloat(classX.value).toFixed(1);
+    });
+
+    btnF.addEventListener('click', ()=>{
+      const x = parseFloat(classX.value);
+      const w = parseFloat(classW.value);
+      yTrue = parseInt(classY.value,10);
+      // forward: z = w*x, p = sigmoid(z)
+      z = w*x;
+      p = 1/(1+Math.exp(-z));
+      logClass.textContent =
+        `Forward Pass:\n`+
+        `  x = ${x.toFixed(2)}, w = ${w.toFixed(2)}\n`+
+        `  z = w·x = ${z.toFixed(4)}\n`+
+        `  p = sigmoid(z) = ${p.toFixed(4)}  (вероятность y=1)\n`+
+        `  Предсказанный класс: ${p>=0.5?1:0}\n`;
+      btnL.disabled = false;
+    });
+
+    btnL.addEventListener('click', ()=>{
+      // loss = -[y·ln(p) + (1-y)·ln(1-p)]
+      const eps = 1e-8;
+      const loss = -(yTrue*Math.log(p+eps) + (1-yTrue)*Math.log(1-p+eps));
+      // gradient wrt w: (p - y)*x
+      const x = parseFloat(classX.value);
+      gradW = (p - yTrue)*x;
+      logClass.textContent +=
+        `\nCompute Loss:\n`+
+        `  true y = ${yTrue}\n`+
+        `  loss = -[y·ln(p)+(1-y)·ln(1-p)] = ${loss.toFixed(4)}\n`+
+        `Gradient dw = (p - y)·x = (${p.toFixed(4)} - ${yTrue})·${x.toFixed(2)} = ${gradW.toFixed(4)}\n`;
+      btnU.disabled = false;
+    });
+
+    btnU.addEventListener('click', ()=>{
+      const w = parseFloat(classW.value);
+      const lr= parseFloat(classLr.value);
+      const wNew = w - lr * gradW;
+      logClass.textContent +=
+        `\nUpdate Weight:\n`+
+        `  w_new = w - lr·dw = ${w.toFixed(4)} - ${lr}·${gradW.toFixed(4)} = ${wNew.toFixed(4)}\n`;
+      classW.value = wNew.toFixed(4);
+      btnF.disabled = false;
+      btnL.disabled = true;
+      btnU.disabled = true;
+    });
+
+    // === Regression demo ===
+    const regX     = document.getElementById('reg-x');
+    const regXVal  = document.getElementById('reg-x-val');
+    const regY     = document.getElementById('reg-y');
+    const regYVal  = document.getElementById('reg-y-val');
+    const regW     = document.getElementById('reg-w');
+    const regB     = document.getElementById('reg-b');
+    const regLr    = document.getElementById('reg-lr');
+    const btnP     = document.getElementById('reg-predict');
+    const btnRL    = document.getElementById('reg-loss');
+    const btnRU    = document.getElementById('reg-update');
+    const logReg   = document.getElementById('log-reg');
+
+    let yPred, yTrueReg, gradW_reg, gradB;
+
+    regX.addEventListener('input', ()=> {
+      regXVal.textContent = parseFloat(regX.value).toFixed(1);
+    });
+    regY.addEventListener('input', ()=> {
+      regYVal.textContent = parseFloat(regY.value).toFixed(1);
+    });
+
+    btnP.addEventListener('click', ()=>{
+      const x = parseFloat(regX.value);
+      const w = parseFloat(regW.value);
+      const b = parseFloat(regB.value);
+      yTrueReg = parseFloat(regY.value);
+      yPred = w*x + b;
+      logReg.textContent =
+        `Predict:\n`+
+        `  x = ${x.toFixed(2)}, w = ${w.toFixed(2)}, b = ${b.toFixed(2)}\n`+
+        `  y_pred = w·x + b = ${yPred.toFixed(4)}\n`;
+      btnRL.disabled = false;
+    });
+
+    btnRL.addEventListener('click', ()=>{
+      // MSE loss = (y_pred - y_true)^2
+      const loss = Math.pow(yPred - yTrueReg, 2);
+      const x = parseFloat(regX.value);
+      gradW_reg = 2*(yPred - yTrueReg)*x;
+      gradB     = 2*(yPred - yTrueReg);
+      logReg.textContent +=
+        `\nCompute Loss:\n`+
+        `  true y = ${yTrueReg.toFixed(2)}\n`+
+        `  MSE = (y_pred - y)² = (${yPred.toFixed(4)} - ${yTrueReg.toFixed(2)})² = ${loss.toFixed(4)}\n`+
+        `Gradients:\n`+
+        `  dw = 2·(y_pred - y)·x = 2·(${yPred.toFixed(4)} - ${yTrueReg.toFixed(2)})·${x.toFixed(2)} = ${gradW_reg.toFixed(4)}\n`+
+        `  db = 2·(y_pred - y) = ${gradB.toFixed(4)}\n`;
+      btnRU.disabled = false;
+    });
+
+    btnRU.addEventListener('click', ()=>{
+      const w = parseFloat(regW.value);
+      const b = parseFloat(regB.value);
+      const lr= parseFloat(regLr.value);
+      const wNew = w - lr*gradW_reg;
+      const bNew = b - lr*gradB;
+      logReg.textContent +=
+        `\nUpdate w and b:\n`+
+        `  w_new = ${w.toFixed(4)} - ${lr}·${gradW_reg.toFixed(4)} = ${wNew.toFixed(4)}\n`+
+        `  b_new = ${b.toFixed(4)} - ${lr}·${gradB.toFixed(4)} = ${bNew.toFixed(4)}\n`;
+      regW.value = wNew.toFixed(4);
+      regB.value = bNew.toFixed(4);
+      btnP.disabled = false;
+      btnRL.disabled = true;
+      btnRU.disabled = true;
+    });
+  </script>
+
+</body>
+</html>

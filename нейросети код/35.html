@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Метрики регрессии «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.5;
+    }
+    h1, h2 { text-align: center; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls button {
+      margin: 0 8px;
+      padding: 6px 14px;
+      font-size: 1rem;
+    }
+    #log {
+      background: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Метрики регрессии</h1>
+  <p style="text-align:center;">🍉⚖️❓ — насколько сильно ты промахнулся?</p>
+
+  <h2>1. Введите свои данные</h2>
+  <table>
+    <tr><th>#</th><th>Истинное y<sub>i</sub></th><th>Предсказанное ŷ<sub>i</sub></th><th>Ошибка e<sub>i</sub>=ŷ−y</th><th>e<sub>i</sub>²</th><th>|e<sub>i</sub>|</th></tr>
+    <!-- 4 примера по умолчанию -->
+    <tr><td>1</td><td><input id="y0" type="number" value="5" step="0.1"></td><td><input id="p0" type="number" value="6" step="0.1"></td><td id="e0">–</td><td id="sq0">–</td><td id="abs0">–</td></tr>
+    <tr><td>2</td><td><input id="y1" type="number" value="3" step="0.1"></td><td><input id="p1" type="number" value="2" step="0.1"></td><td id="e1">–</td><td id="sq1">–</td><td id="abs1">–</td></tr>
+    <tr><td>3</td><td><input id="y2" type="number" value="8" step="0.1"></td><td><input id="p2" type="number" value="7" step="0.1"></td><td id="e2">–</td><td id="sq2">–</td><td id="abs2">–</td></tr>
+    <tr><td>4</td><td><input id="y3" type="number" value="2" step="0.1"></td><td><input id="p3" type="number" value="4" step="0.1"></td><td id="e3">–</td><td id="sq3">–</td><td id="abs3">–</td></tr>
+  </table>
+
+  <div class="controls">
+    <button id="compute">Вычислить метрики</button>
+    <button id="reset">Сбросить</button>
+  </div>
+
+  <h2>2. Результаты и промежуточные расчёты</h2>
+  <div id="log">
+    Журнал расчётов: нажмите «Вычислить метрики», чтобы увидеть все шаги.
+  </div>
+
+  <script>
+    const N = 4;  // число примеров
+    const logEl = document.getElementById('log');
+    const inputsY = [], inputsP = [];
+    const cellsE = [], cellsSQ = [], cellsABS = [];
+    for(let i=0;i<N;i++){
+      inputsY.push(document.getElementById('y'+i));
+      inputsP.push(document.getElementById('p'+i));
+      cellsE.push(document.getElementById('e'+i));
+      cellsSQ.push(document.getElementById('sq'+i));
+      cellsABS.push(document.getElementById('abs'+i));
+    }
+    document.getElementById('reset').onclick = () => {
+      // сбросить значения и очистить ячейки
+      const defaultsY = [5,3,8,2], defaultsP = [6,2,7,4];
+      for(let i=0;i<N;i++){
+        inputsY[i].value = defaultsY[i];
+        inputsP[i].value = defaultsP[i];
+        cellsE[i].textContent = '–';
+        cellsSQ[i].textContent = '–';
+        cellsABS[i].textContent = '–';
+      }
+      logEl.textContent = 'Журнал расчётов: нажмите «Вычислить метрики».';
+    };
+    document.getElementById('compute').onclick = () => {
+      const y = [], p = [];
+      for(let i=0;i<N;i++){
+        y[i] = parseFloat(inputsY[i].value);
+        p[i] = parseFloat(inputsP[i].value);
+      }
+      // Шаг 1: ошибки, квадраты, модули
+      let log = 'Шаг 1: по каждому примеру считаем eᵢ, eᵢ², |eᵢ|:\n\n';
+      const errors = [], sq = [], absErr = [];
+      for(let i=0;i<N;i++){
+        const e = p[i] - y[i];
+        const s = e*e;
+        const a = Math.abs(e);
+        errors[i] = e; sq[i] = s; absErr[i] = a;
+        cellsE[i].textContent = e.toFixed(2);
+        cellsSQ[i].textContent = s.toFixed(2);
+        cellsABS[i].textContent = a.toFixed(2);
+        log += `  Пример ${i+1}: ŷ=${p[i]}, y=${y[i]} → e=${p[i]}−${y[i]}=${e.toFixed(2)}, `+
+               `e²=${s.toFixed(2)}, |e|=${a.toFixed(2)}\n`;
+      }
+      // Шаг 2: MSE
+      const sumSq = sq.reduce((a,b)=>a+b,0);
+      const mse = sumSq / N;
+      log += `\nШаг 2: MSE = (∑eᵢ²)/N = (${sq.map(x=>x.toFixed(2)).join('+')})/${N} = `+
+             `${sumSq.toFixed(2)}/${N} = ${mse.toFixed(4)}\n`;
+
+      // Шаг 3: MAE
+      const sumAbs = absErr.reduce((a,b)=>a+b,0);
+      const mae = sumAbs / N;
+      log += `\nШаг 3: MAE = (∑|eᵢ|)/N = (${absErr.map(x=>x.toFixed(2)).join('+')})/${N} = `+
+             `${sumAbs.toFixed(2)}/${N} = ${mae.toFixed(4)}\n`;
+
+      // Шаг 4: R²
+      const meanY = y.reduce((a,b)=>a+b,0)/N;
+      const totSq = y.reduce((a,yi)=>a + Math.pow(yi - meanY,2),0);
+      const r2 = 1 - (sumSq / totSq);
+      log += `\nШаг 4: R² = 1 − (∑eᵢ²)/(∑(yᵢ−ȳ)²)\n`+
+             `  Среднее ȳ = (${y.join('+')})/${N} = ${meanY.toFixed(2)}\n`+
+             `  ∑(yᵢ−ȳ)² = ${y.map(yi=>`(${yi.toFixed(2)}−${meanY.toFixed(2)})²`).join('+')} = ${totSq.toFixed(2)}\n`+
+             `  R² = 1 − ${sumSq.toFixed(2)}/${totSq.toFixed(2)} = ${r2.toFixed(4)}\n`;
+
+      logEl.textContent = log;
+    };
+
+  </script>
+</body>
+</html>
