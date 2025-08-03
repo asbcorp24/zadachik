@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Пример кластеризации K-means «на пальцах»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      line-height: 1.4;
+      padding: 0 15px;
+    }
+    h1, h2 { text-align: center; }
+    #canvas {
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls input, .controls button {
+      font-size: 1rem;
+      padding: 6px 12px;
+      margin: 0 6px;
+    }
+    #log {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Кластеризация K-means на пальцах</h1>
+  <p style="text-align:center;">Разобьём случайные точки на группы, как магнитики притягивают опилки.</p>
+
+  <canvas id="canvas" width="600" height="400"></canvas>
+
+  <div class="controls">
+    <button id="init">1. Сгенерировать точки и расставить центры</button>
+    <button id="assign" disabled>2. Присвоить точки к ближайшим центрам</button>
+    <button id="update" disabled>3. Пересчитать центры</button>
+    <button id="reset" disabled>Сбросить</button>
+  </div>
+
+  <div id="log">
+    Журнал действий: жми «1. Сгенерировать…» для начала.
+  </div>
+
+  <script>
+    // Утилиты
+    function rand(a,b){return Math.random()*(b-a)+a;}
+    function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+    const colors = ['#e63946','#2a9d8f','#457b9d'];
+
+    // Переменные
+    let points = [], centers = [], labels = [];
+    const K = 3;
+    let step = 0;
+
+    const canvas = document.getElementById('canvas');
+    const ctx    = canvas.getContext('2d');
+    const logEl  = document.getElementById('log');
+    const btnInit   = document.getElementById('init');
+    const btnAssign = document.getElementById('assign');
+    const btnUpdate = document.getElementById('update');
+    const btnReset  = document.getElementById('reset');
+
+    // Отрисовка
+    function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // точки
+      points.forEach((p,i)=>{
+        const c = labels[i] != null ? colors[labels[i]] : '#333';
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,5,0,2*Math.PI);
+        ctx.fill();
+      });
+      // центры
+      centers.forEach((c,i)=>{
+        ctx.fillStyle = colors[i];
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(c.x,c.y,8,0,2*Math.PI);
+        ctx.fill(); ctx.stroke();
+      });
+    }
+
+    // Шаг 1: инициация
+    btnInit.onclick = ()=>{
+      step = 1;
+      // генерируем 30 случайных точек
+      points = Array.from({length:30},()=>{
+        return { x: rand(30,570), y: rand(30,370) };
+      });
+      // случайные центры
+      centers = Array.from({length:K},()=>{
+        return { x: rand(50,550), y: rand(50,350) };
+      });
+      labels = Array(points.length).fill(null);
+      logEl.textContent = 
+        `Шаг 1: Сгенерировали ${points.length} точек.\n` +
+        `Расставили ${K} центров случайно:\n` +
+        centers.map((c,i)=>` Ц${i}: (${c.x.toFixed(1)},${c.y.toFixed(1)})`).join('\n') +
+        `\n\nНажми "2. Присвоить точки".`;
+      draw();
+      btnAssign.disabled = false;
+      btnUpdate.disabled = true;
+      btnReset.disabled  = false;
+    };
+
+    // Шаг 2: присвоение
+    btnAssign.onclick = ()=>{
+      step = 2;
+      logEl.textContent = `Шаг 2: Присвоение точек к ближайшим центрам:\n`;
+      points.forEach((p,i)=>{
+        let best = 0, bestD = dist(p,centers[0]);
+        for(let j=1;j<K;j++){
+          const d = dist(p,centers[j]);
+          if(d < bestD){ bestD = d; best = j; }
+        }
+        labels[i] = best;
+        logEl.textContent += 
+          `  Точка${i} (${p.x.toFixed(0)},${p.y.toFixed(0)}) → Центр ${best} (d=${bestD.toFixed(1)})\n`;
+      });
+      draw();
+      btnAssign.disabled = true;
+      btnUpdate.disabled = false;
+      logEl.textContent += `\nТеперь "3. Пересчитать центры".`;
+    };
+
+    // Шаг 3: пересчёт центров
+    btnUpdate.onclick = ()=>{
+      step = 3;
+      logEl.textContent = `Шаг 3: Пересчёт центров по среднему координат:\n`;
+      centers.forEach((c,i)=>{
+        const members = points.filter((_,j)=>labels[j]===i);
+        if(members.length){
+          const mx = members.reduce((s,p)=>s+p.x,0)/members.length;
+          const my = members.reduce((s,p)=>s+p.y,0)/members.length;
+          logEl.textContent += 
+            `  Центр ${i}: было (${c.x.toFixed(1)},${c.y.toFixed(1)}) ` +
+            `→ стало (${mx.toFixed(1)},${my.toFixed(1)})\n`;
+          c.x = mx; c.y = my;
+        }
+      });
+      draw();
+      btnUpdate.disabled = true;
+      btnAssign.disabled = false;
+      logEl.textContent += `\nЕсли нужно, снова "2. Присвоить точки". И так до стабильности.`;
+    };
+
+    // Сброс
+    btnReset.onclick = ()=>{
+      points = []; centers = []; labels = [];
+      step = 0;
+      logEl.textContent = `Журнал действий: жми «1. Сгенерировать…» для начала.`;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      btnAssign.disabled = true;
+      btnUpdate.disabled = true;
+      btnReset.disabled  = true;
+    };
+
+    // начальная очистка
+    btnReset.onclick();
+  </script>
+
+</body>
+</html>

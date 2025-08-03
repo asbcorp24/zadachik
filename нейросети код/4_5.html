@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>MLP Demo – Простая полносвязная сеть</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; line-height: 1.4; }
+    h2 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    .section { margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 6px; }
+    .controls { display: flex; gap: 20px; flex-wrap: wrap; }
+    .control { flex: 1; min-width: 150px; }
+    .neuron { display: inline-block; width: 60px; height: 40px; margin: 5px; 
+              background: #fff; border: 1px solid #888; border-radius: 4px;
+              text-align: center; line-height: 40px; font-weight: bold; }
+    button { padding: 8px 16px; font-size: 1rem; }
+    .weights { font-size: 0.9rem; color: #555; }
+  </style>
+</head>
+<body>
+
+  <h1>Демо: Полносвязная сеть (MLP) «для дурачков»</h1>
+
+  <div class="section" id="inputs-section">
+    <h2>1. Входы (3 числа)</h2>
+    <p>Двигай ползунки, чтобы задать температуру, дождь и день недели:</p>
+    <div class="controls">
+      <div class="control">
+        <label>Темп. (°C): <span id="in-temp">25</span></label><br/>
+        <input type="range" id="slider-temp" min="0" max="40" value="25">
+      </div>
+      <div class="control">
+        <label>Дождь (мм): <span id="in-rain">0</span></label><br/>
+        <input type="range" id="slider-rain" min="0" max="20" value="0">
+      </div>
+      <div class="control">
+        <label>День (1–7): <span id="in-day">5</span></label><br/>
+        <input type="range" id="slider-day" min="1" max="7" value="5">
+      </div>
+    </div>
+  </div>
+
+  <div class="section" id="hidden-section">
+    <h2>2. Скрытый слой (4 нейрона + ReLU)</h2>
+    <p>Каждый нейрон считает <em>взвешенную сумму</em> + смещение, потом ReLU (отбрасывает отрицательные):</p>
+    <div id="hidden-neurons">
+      <!-- здесь появятся 4 блока с результатами -->
+    </div>
+    <p class="weights">
+      <button id="rand-hidden">Randomize hidden weights & biases</button>
+    </p>
+  </div>
+
+  <div class="section" id="output-section">
+    <h2>3. Выходной слой (2 нейрона + Softmax)</h2>
+    <p>Берём 2 числа из скрытого слоя, считаем тоже взвешенную сумму + bias и переводим в вероятности:</p>
+    <div class="controls">
+      <div class="control">
+        <div class="neuron">🏃‍♂️<br/><span id="out-walk">–</span></div>
+        <div class="neuron">🏠<br/><span id="out-home">–</span></div>
+      </div>
+    </div>
+    <p class="weights">
+      <button id="rand-output">Randomize output weights & biases</button>
+    </p>
+  </div>
+
+  <script>
+    // Параметры сети
+    let wH = []; // скрытый: матрица 3×4
+    let bH = []; // скрытый: смещения 4
+    let wO = []; // выходной: матрица 4×2
+    let bO = []; // выходной: смещения 2
+
+    // Получить входы из ползунков
+    function getInputs() {
+      return [
+        +document.getElementById('slider-temp').value,
+        +document.getElementById('slider-rain').value,
+        +document.getElementById('slider-day').value
+      ];
+    }
+
+    // Обновить текст рядом с ползунками
+    function bindSliders() {
+      const names = ['temp','rain','day'];
+      names.forEach(name => {
+        const slider = document.getElementById('slider-' + name);
+        const display = document.getElementById('in-' + name);
+        slider.addEventListener('input', () => {
+          display.textContent = slider.value;
+          computeAll();
+        });
+      });
+    }
+
+    // Инициализация случайных весов
+    function randMatrix(rows, cols) {
+      const M = [];
+      for(let i=0;i<rows;i++){
+        M.push(Array.from({length:cols},()=> (Math.random()*2-1).toFixed(2)*1));
+      }
+      return M;
+    }
+    function randVector(n) {
+      return Array.from({length:n},()=> (Math.random()*2-1).toFixed(2)*1);
+    }
+
+    function randomizeHidden() {
+      wH = randMatrix(3,4);
+      bH = randVector(4);
+      console.log('Hidden w:',wH,'bH:',bH);
+      computeAll();
+    }
+    function randomizeOutput() {
+      wO = randMatrix(4,2);
+      bO = randVector(2);
+      console.log('Output w:',wO,'bO:',bO);
+      computeAll();
+    }
+
+    // ReLU
+    function relu(x) { return x>0?x:0; }
+
+    // Softmax
+    function softmax(arr) {
+      const max = Math.max(...arr);
+      const exps = arr.map(x=>Math.exp(x-max));
+      const sum = exps.reduce((a,b)=>a+b,0);
+      return exps.map(v => (v/sum).toFixed(2)*1);
+    }
+
+    // Вычислить скрытый слой
+    function computeHidden(inputs) {
+      const hidden = [];
+      for(let j=0;j<4;j++){
+        let sum = bH[j];
+        for(let i=0;i<3;i++){
+          sum += inputs[i] * wH[i][j];
+        }
+        hidden[j] = relu(sum.toFixed(2)*1);
+      }
+      return hidden;
+    }
+
+    // Вычислить выходной слой
+    function computeOutput(hidden) {
+      const out = [];
+      for(let k=0;k<2;k++){
+        let sum = bO[k];
+        for(let j=0;j<4;j++){
+          sum += hidden[j] * wO[j][k];
+        }
+        out[k] = sum;
+      }
+      return softmax(out);
+    }
+
+    // Обновить интерфейс
+    function computeAll() {
+      const inputs = getInputs();
+      const hidden = computeHidden(inputs);
+
+      // Показать скрытый
+      const divH = document.getElementById('hidden-neurons');
+      divH.innerHTML = '';
+      hidden.forEach((val,i)=> {
+        const el = document.createElement('div');
+        el.className = 'neuron';
+        el.textContent = val;
+        divH.appendChild(el);
+      });
+
+      // Показать выход
+      const out = computeOutput(hidden);
+      document.getElementById('out-walk').textContent = out[0];
+      document.getElementById('out-home').textContent = out[1];
+    }
+
+    // Начальная настройка
+    bindSliders();
+    document.getElementById('rand-hidden').onclick = randomizeHidden;
+    document.getElementById('rand-output').onclick = randomizeOutput;
+    // Сразу сгенерировать веса
+    randomizeHidden();
+    randomizeOutput();
+  </script>
+</body>
+</html>

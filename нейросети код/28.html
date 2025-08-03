@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Unsupervised Learning Demo «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      line-height: 1.4;
+      padding: 0 15px;
+    }
+    h1, h2 { text-align: center; }
+    section {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .controls label {
+      font-size: 0.95rem;
+    }
+    .controls input, .controls select, .controls button {
+      font-size: 1rem;
+      padding: 4px 8px;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    #log-kmeans, #log-pca {
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-line;
+      height: 150px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Обучение без учителя (Unsupervised Learning)</h1>
+  <p style="text-align:center;">🏫👀🔍 — ИИ сам ищет структуры в данных без правильных ответов!</p>
+
+  <!-- K-means Clustering Demo -->
+  <section>
+    <h2>1. Кластеризация (K-means)</h2>
+    <canvas id="canvasK" width="600" height="400"></canvas>
+    <div class="controls">
+      <label>Число кластеров K:
+        <input type="number" id="kInput" value="3" min="2" max="5">
+      </label>
+      <button id="initK">Инициация кластеров</button>
+      <button id="assignK" disabled>Шаг: Присвоение точек</button>
+      <button id="updateK" disabled>Шаг: Обновить центры</button>
+      <button id="resetK" disabled>Сбросить</button>
+    </div>
+    <div id="log-kmeans">Журнал K-means: жми «Инициация кластеров». 🧲</div>
+  </section>
+
+  <!-- PCA Demo -->
+  <section>
+    <h2>2. PCA (Упрощение данных)</h2>
+    <canvas id="canvasP" width="600" height="400"></canvas>
+    <div class="controls">
+      <button id="computePCA">Вычислить PCA</button>
+      <button id="resetPCA" disabled>Сбросить</button>
+    </div>
+    <div id="log-pca">Журнал PCA: жми «Вычислить PCA». 🖼️🔍➡️✂️</div>
+  </section>
+
+  <script>
+  // === Общие утилиты ===
+  function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+  function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  const colors = ['#e63946','#2a9d8f','#457b9d','#f4a261','#8d99ae'];
+
+  // === K-means ===
+  const canvasK = document.getElementById('canvasK');
+  const ctxK    = canvasK.getContext('2d');
+  const logK    = document.getElementById('log-kmeans');
+  let pointsK, centroids, assignments, K, stepK;
+
+  function drawK() {
+    ctxK.clearRect(0,0,canvasK.width,canvasK.height);
+    // точки
+    pointsK.forEach((p,i)=>{
+      ctxK.fillStyle = assignments[i]!=null? colors[assignments[i]] : '#666';
+      ctxK.beginPath();
+      ctxK.arc(p.x,p.y,5,0,2*Math.PI);
+      ctxK.fill();
+    });
+    // центроиды
+    centroids.forEach((c,i)=>{
+      ctxK.fillStyle = colors[i];
+      ctxK.strokeStyle = '#000';
+      ctxK.lineWidth = 2;
+      ctxK.beginPath();
+      ctxK.arc(c.x,c.y,8,0,2*Math.PI);
+      ctxK.fill();
+      ctxK.stroke();
+    });
+  }
+
+  document.getElementById('initK').onclick = ()=>{
+    K = parseInt(document.getElementById('kInput').value,10);
+    // генерируем 30 случайных точек
+    pointsK = Array.from({length:30},()=>({
+      x: randInt(20,580),
+      y: randInt(20,380)
+    }));
+    // рандомно выбираем центроиды
+    centroids = [];
+    for(let i=0;i<K;i++){
+      centroids.push({
+        x: randInt(50,550),
+        y: randInt(50,350)
+      });
+    }
+    assignments = Array(pointsK.length).fill(null);
+    stepK = 0;
+    drawK();
+    logK.textContent = `Шаг ${stepK}: инициализировано ${K} центроидов случайно.\n\n` +
+      centroids.map((c,i)=>`Ц${i}: (${c.x},${c.y})`).join('\n') + '\n\n' +
+      `Нажми «Шаг: Присвоение точек».`;
+    document.getElementById('assignK').disabled = false;
+    document.getElementById('updateK').disabled = true;
+    document.getElementById('resetK').disabled  = false;
+  };
+
+  document.getElementById('assignK').onclick = ()=>{
+    stepK++;
+    logK.textContent = `Шаг ${stepK}: присваиваем каждой точке ближайший центов.\n`;
+    pointsK.forEach((p,i)=>{
+      let best = 0, bestD = distance(p,centroids[0]);
+      for(let j=1;j<K;j++){
+        const d = distance(p,centroids[j]);
+        if(d<bestD){ bestD=d; best=j; }
+      }
+      assignments[i] = best;
+      logK.textContent += 
+        `Точка${i} (${p.x},${p.y}) → Ц${best} (d=${bestD.toFixed(1)})\n`;
+    });
+    drawK();
+    document.getElementById('assignK').disabled = true;
+    document.getElementById('updateK').disabled = false;
+  };
+
+  document.getElementById('updateK').onclick = ()=>{
+    stepK++;
+    logK.textContent = `Шаг ${stepK}: обновляем центроиды по среднему.\n`;
+    centroids.forEach((c,i)=>{
+      const clusterPts = pointsK.filter((_,j)=>assignments[j]===i);
+      if(clusterPts.length){
+        const mx = clusterPts.reduce((s,p)=>s+p.x,0)/clusterPts.length;
+        const my = clusterPts.reduce((s,p)=>s+p.y,0)/clusterPts.length;
+        logK.textContent += 
+          `Ц${i}: старо=(${c.x},${c.y}) → новое=(${mx.toFixed(1)},${my.toFixed(1)})\n`;
+        c.x = mx; c.y = my;
+      }
+    });
+    drawK();
+    document.getElementById('assignK').disabled = false;
+    document.getElementById('updateK').disabled = true;
+  };
+
+  document.getElementById('resetK').onclick = ()=>{
+    ctxK.clearRect(0,0,canvasK.width,canvasK.height);
+    logK.textContent = 'Журнал K-means: жми «Инициация кластеров». 🧲';
+    document.getElementById('assignK').disabled = true;
+    document.getElementById('updateK').disabled = true;
+    document.getElementById('resetK').disabled  = true;
+  };
+
+  // === PCA ===
+  const canvasP = document.getElementById('canvasP');
+  const ctxP    = canvasP.getContext('2d');
+  const logP    = document.getElementById('log-pca');
+  let dataP;
+
+  function drawP(axis1,axis2){
+    ctxP.clearRect(0,0,canvasP.width,canvasP.height);
+    // рисуем точки
+    dataP.forEach(p=>{
+      ctxP.fillStyle = '#007ACC';
+      ctxP.beginPath();
+      ctxP.arc(p[0]*4+300,p[1]*4+200,4,0,2*Math.PI);
+      ctxP.fill();
+    });
+    // рисуем оси PCA
+    if(axis1){
+      ctxP.strokeStyle='#e63946'; ctxP.lineWidth=2;
+      ctxP.beginPath();
+      ctxP.moveTo(300,200);
+      ctxP.lineTo(300+axis1[0]*60,200-axis1[1]*60);
+      ctxP.stroke();
+    }
+    if(axis2){
+      ctxP.strokeStyle='#2a9d8f'; ctxP.lineWidth=2;
+      ctxP.beginPath();
+      ctxP.moveTo(300,200);
+      ctxP.lineTo(300+axis2[0]*60,200-axis2[1]*60);
+      ctxP.stroke();
+    }
+  }
+
+  document.getElementById('computePCA').onclick = ()=>{
+    // простые данные: 10 точек с корреляцией
+    dataP = [[1,2],[2,4],[3,6],[4,8],[5,10],[6,12],[7,14],[8,16],[9,18],[10,20]];
+    // 1) mean
+    const mean = [
+      dataP.reduce((s,p)=>s+p[0],0)/dataP.length,
+      dataP.reduce((s,p)=>s+p[1],0)/dataP.length
+    ];
+    logP.textContent = `Данные: ${JSON.stringify(dataP)}\n\n` +
+      `1) Среднее (mean): (${mean[0].toFixed(2)}, ${mean[1].toFixed(2)})\n`;
+    // 2) центрируем
+    const centered = dataP.map(p=>[p[0]-mean[0], p[1]-mean[1]]);
+    // 3) ковариация 2×2
+    let c00=0,c01=0,c11=0;
+    centered.forEach(p=>{
+      c00 += p[0]*p[0];
+      c01 += p[0]*p[1];
+      c11 += p[1]*p[1];
+    });
+    c00 /= dataP.length; c01 /= dataP.length; c11 /= dataP.length;
+    const cov = [[c00,c01],[c01,c11]];
+    logP.textContent +=
+      `\n2) Ковариационная матрица:\n`+
+      `  [${cov[0][0].toFixed(2)}  ${cov[0][1].toFixed(2)}]\n`+
+      `  [${cov[1][0].toFixed(2)}  ${cov[1][1].toFixed(2)}]\n`;
+    // 4) собственные числа/векторы для 2×2
+    const tr = cov[0][0]+cov[1][1];
+    const det = cov[0][0]*cov[1][1] - cov[0][1]*cov[1][0];
+    const disc = Math.sqrt(tr*tr - 4*det);
+    const λ1 = (tr+disc)/2, λ2 = (tr-disc)/2;
+    // векторы
+    function eigvec(l){
+      const [a,b] = cov[0];
+      if(Math.abs(b)>1e-6){
+        return [l-cov[1][1], b];
+      } else {
+        return [cov[0][1], l-cov[0][0]];
+      }
+    }
+    let v1 = eigvec(λ1), v2 = eigvec(λ2);
+    // нормировка
+    const norm = v=>{ const n=Math.hypot(v[0],v[1]); return [v[0]/n,v[1]/n]; };
+    v1 = norm(v1); v2 = norm(v2);
+    logP.textContent +=
+      `\n3) Eigenvalues: λ1=${λ1.toFixed(2)}, λ2=${λ2.toFixed(2)}\n`+
+      `   PC1 = [${v1.map(x=>x.toFixed(2)).join(',')}],\n`+
+      `   PC2 = [${v2.map(x=>x.toFixed(2)).join(',')}]\n`;
+    // отрисовать
+    drawP(v1,v2);
+    document.getElementById('resetPCA').disabled = false;
+    document.getElementById('computePCA').disabled = true;
+  };
+
+  document.getElementById('resetPCA').onclick = ()=>{
+    ctxP.clearRect(0,0,canvasP.width,canvasP.height);
+    logP.textContent = 'Журнал PCA: жми «Вычислить PCA». 🖼️🔍➡️✂️';
+    document.getElementById('computePCA').disabled = false;
+    document.getElementById('resetPCA').disabled = true;
+  };
+
+  </script>
+
+</body>
+</html>

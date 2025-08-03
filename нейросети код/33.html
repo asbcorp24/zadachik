@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Augmentation «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    canvas {
+      display: block;
+      margin: 0 auto 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+    .controls {
+      text-align: center;
+      margin: 10px 0 20px;
+    }
+    .controls button {
+      margin: 4px;
+      padding: 6px 12px;
+      font-size: 1rem;
+    }
+    #logImage, #logText {
+      background: #f5f5f5;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 30px;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      font-size: 1rem;
+      padding: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Data Augmentation «для дурачков»</h1>
+
+  <!-- Image Augmentation -->
+  <section>
+    <h2>Аугментация изображений 👩‍🦰🧢🌞🌑</h2>
+    <canvas id="imgCanvas" width="300" height="300"></canvas>
+    <div class="controls">
+      <button id="rotateBtn">Повернуть +15°</button>
+      <button id="flipXBtn">Зеркально X</button>
+      <button id="flipYBtn">Зеркально Y</button>
+      <button id="cropBtn">Обрезать центр</button>
+      <button id="brightenBtn">Яркость +20%</button>
+      <button id="noiseBtn">Добавить шум</button>
+      <button id="resetImgBtn">Сбросить</button>
+    </div>
+    <div id="logImage">Журнал: выполните любую аугментацию.</div>
+  </section>
+
+  <!-- Text Augmentation -->
+  <section>
+    <h2>Аугментация текста 📝🔀💬</h2>
+    <textarea id="textInput">Сколько стоит квартира в центре города?</textarea>
+    <div class="controls">
+      <button id="synonymBtn">Синонимы</button>
+      <button id="deleteWordBtn">Удалить слово</button>
+      <button id="shuffleBtn">Переставить слова</button>
+      <button id="textNoiseBtn">Добавить шум</button>
+      <button id="resetTextBtn">Сбросить</button>
+    </div>
+    <div id="logText">Журнал: выполните любую аугментацию текста.</div>
+  </section>
+
+  <script>
+  // ===== Image Augmentation =====
+  const canvas = document.getElementById('imgCanvas'),
+        ctx = canvas.getContext('2d'),
+        logImage = document.getElementById('logImage');
+  let baseImage = new Image(), angle=0, scaleX=1, scaleY=1;
+  // Рисуем простую «голову» на baseImage через canvas
+  function drawBaseImage() {
+    const off = document.createElement('canvas');
+    off.width = 300; off.height = 300;
+    const cx = off.getContext('2d');
+    // фон
+    cx.fillStyle = '#ffe0bd';
+    cx.fillRect(0,0,300,300);
+    // глаза
+    cx.fillStyle = '#000';
+    cx.beginPath(); cx.arc(100,120,10,0,2*Math.PI); cx.fill();
+    cx.beginPath(); cx.arc(200,120,10,0,2*Math.PI); cx.fill();
+    // рот
+    cx.strokeStyle = '#c33';
+    cx.lineWidth = 5;
+    cx.beginPath();
+    cx.arc(150,180,40,0,Math.PI);
+    cx.stroke();
+    baseImage.src = off.toDataURL();
+  }
+  // Перерисовать с учетом трансформаций
+  function redrawImage() {
+    ctx.clearRect(0,0,300,300);
+    ctx.save();
+    ctx.translate(150,150);
+    ctx.rotate(angle*Math.PI/180);
+    ctx.scale(scaleX,scaleY);
+    ctx.drawImage(baseImage, -150, -150, 300, 300);
+    ctx.restore();
+  }
+  baseImage.onload = redrawImage;
+  drawBaseImage();
+
+  function log(msg) {
+    logImage.textContent = msg + '\n\n' + logImage.textContent;
+  }
+
+  document.getElementById('rotateBtn').onclick = () => {
+    angle = (angle + 15) % 360;
+    redrawImage();
+    log(`Поворот: угол = ${angle}°`);
+  };
+  document.getElementById('flipXBtn').onclick = () => {
+    scaleX = -scaleX;
+    redrawImage();
+    log(`Зеркально по X: scaleX = ${scaleX}`);
+  };
+  document.getElementById('flipYBtn').onclick = () => {
+    scaleY = -scaleY;
+    redrawImage();
+    log(`Зеркально по Y: scaleY = ${scaleY}`);
+  };
+  document.getElementById('cropBtn').onclick = () => {
+    // Обрезаем центр 150×150 и растягиваем на весь канвас
+    const imgData = ctx.getImageData(75,75,150,150);
+    ctx.clearRect(0,0,300,300);
+    ctx.putImageData(imgData,75,75);
+    log(`Обрезка: взяли центральный 150×150 фрагмент`);
+  };
+  document.getElementById('brightenBtn').onclick = () => {
+    const img = ctx.getImageData(0,0,300,300);
+    for(let i=0;i<img.data.length;i+=4){
+      img.data[i]   = Math.min(255, img.data[i]*1.2);
+      img.data[i+1] = Math.min(255, img.data[i+1]*1.2);
+      img.data[i+2] = Math.min(255, img.data[i+2]*1.2);
+    }
+    ctx.putImageData(img,0,0);
+    log(`Яркость: R/G/B ×1.2`);
+  };
+  document.getElementById('noiseBtn').onclick = () => {
+    const img = ctx.getImageData(0,0,300,300);
+    const count = 500;
+    for(let i=0;i<count;i++){
+      const x = Math.floor(Math.random()*300),
+            y = Math.floor(Math.random()*300),
+            idx = (y*300 + x)*4;
+      img.data[idx] = img.data[idx+1] = img.data[idx+2] = 255 * Math.random();
+    }
+    ctx.putImageData(img,0,0);
+    log(`Шум: добавили ${count} случайных пикселей`);
+  };
+  document.getElementById('resetImgBtn').onclick = () => {
+    angle=0; scaleX=1; scaleY=1;
+    drawBaseImage();
+    logImage.textContent = 'Журнал: выполните любую аугментацию.';
+  };
+
+  // ===== Text Augmentation =====
+  const textarea = document.getElementById('textInput'),
+        logText = document.getElementById('logText'),
+        originalText = textarea.value;
+
+  const synonyms = {
+    "Сколько": "Какова",
+    "стоит": "цена",
+    "квартира": "жильё",
+    "центре": "ядре",
+    "города": "города"
+  };
+
+  function logT(msg) {
+    logText.textContent = msg + '\n\n' + logText.textContent;
+  }
+
+  document.getElementById('synonymBtn').onclick = () => {
+    let words = textarea.value.split(' ');
+    let used = [];
+    words = words.map(w => {
+      const w0 = w.replace(/[.,!?]/,'');
+      if(synonyms[w0]){
+        used.push(`${w0}→${synonyms[w0]}`);
+        return w.replace(w0, synonyms[w0]);
+      }
+      return w;
+    });
+    textarea.value = words.join(' ');
+    logT(`Синонимы: заменили ${used.join(', ')}`);
+  };
+
+  document.getElementById('deleteWordBtn').onclick = () => {
+    let words = textarea.value.split(' ');
+    if(words.length<=1) return;
+    const idx = Math.floor(Math.random()*words.length);
+    const removed = words.splice(idx,1);
+    textarea.value = words.join(' ');
+    logT(`Удалили слово "${removed[0]}" (индекс ${idx})`);
+  };
+
+  document.getElementById('shuffleBtn').onclick = () => {
+    let words = textarea.value.split(' ');
+    for(let i=words.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [words[i],words[j]] = [words[j],words[i]];
+    }
+    textarea.value = words.join(' ');
+    logT(`Переставили слова случайно`);
+  };
+
+  document.getElementById('textNoiseBtn').onclick = () => {
+    let txt = textarea.value;
+    if(txt.length<1) return;
+    const pos = Math.floor(Math.random()*txt.length);
+    const char = String.fromCharCode(1072 + Math.floor(Math.random()*32));
+    textarea.value = txt.slice(0,pos) + char + txt.slice(pos);
+    logT(`Добавили шум: вставили "${char}" в позицию ${pos}`);
+  };
+
+  document.getElementById('resetTextBtn').onclick = () => {
+    textarea.value = originalText;
+    logText.textContent = 'Журнал: выполните любую аугментацию текста.';
+  };
+  </script>
+
+</body>
+</html>

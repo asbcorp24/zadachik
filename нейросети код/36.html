@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Генеративные модели «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    section { border: 1px solid #ccc; padding: 15px; border-radius: 6px; margin-bottom: 30px; }
+    .controls {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .controls button {
+      margin: 4px;
+      padding: 6px 12px;
+      font-size: 1rem;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto 10px;
+      background: #fff;
+      border: 1px solid #888;
+    }
+    #logGAN, #logVAE, #logDiff {
+      background: #f5f5f5;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    .col {
+      flex: 1 1 45%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Генеративные модели «для дурачков»</h1>
+  <p style="text-align:center;">🎨🤖📚✨ — обучаем на примерах, а потом создаём новое!</p>
+
+  <!-- GAN Section -->
+  <section>
+    <h2>1. GAN (Генератор vs Дискриминатор)</h2>
+    <div class="row">
+      <div class="col">
+        <strong>Real Images</strong>
+        <canvas id="ganReal" width="150" height="150"></canvas>
+      </div>
+      <div class="col">
+        <strong>Generated</strong>
+        <canvas id="ganFake" width="150" height="150"></canvas>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="ganTrain">Train GAN Step</button>
+      <button id="ganGen">Generate Image</button>
+      <button id="ganReset">Reset GAN</button>
+    </div>
+    <div id="logGAN">Журнал GAN: жми «Train GAN Step».</div>
+  </section>
+
+  <!-- VAE Section -->
+  <section>
+    <h2>2. VAE (Encoder → Latent → Decoder)</h2>
+    <div class="controls">
+      <button id="vaeEncode">Encode</button>
+      <button id="vaeDecode" disabled>Decode</button>
+      <button id="vaeReset">Reset VAE</button>
+    </div>
+    <div id="logVAE">Журнал VAE: Encode → получаем mean и var, затем Decode.</div>
+  </section>
+
+  <!-- Diffusion Section -->
+  <section>
+    <h2>3. Diffusion Model (Шум → Образ)</h2>
+    <canvas id="diffCanvas" width="300" height="300"></canvas>
+    <div class="controls">
+      <button id="diffStep1">Step 1: Начало с шума</button>
+      <button id="diffStep2" disabled>Step 2: Немного очистили</button>
+      <button id="diffStep3" disabled>Step 3: Финал</button>
+      <button id="diffReset">Reset Diffusion</button>
+    </div>
+    <div id="logDiff">Журнал Diffusion: шаги показывают, как шум превращается в образ.</div>
+  </section>
+
+<script>
+  // ===== GAN Demo =====
+  const ganReal = document.getElementById('ganReal').getContext('2d'),
+        ganFake = document.getElementById('ganFake').getContext('2d'),
+        logGAN = document.getElementById('logGAN');
+  let genQual=0.2, discAcc=0.8, ganStep=0;
+  function drawGAN(){
+    // Real: зелёный квадрат
+    ganReal.fillStyle='#4caf50';
+    ganReal.fillRect(10,10,130,130);
+    // Fake: цвет от красного(genQual small) к зелёному(genQual large)
+    const r = Math.floor(255*(1-genQual)),
+          g = Math.floor(255*genQual);
+    ganFake.fillStyle=`rgb(${r},${g},0)`;
+    ganFake.fillRect(10,10,130,130);
+  }
+  function logG(msg){
+    logGAN.textContent = msg + '\n\n' + logGAN.textContent;
+  }
+  document.getElementById('ganTrain').onclick = ()=>{
+    ganStep++;
+    // симулируем обучение
+    genQual = Math.min(1, genQual + 0.1);
+    discAcc = Math.max(0, discAcc - 0.05);
+    drawGAN();
+    logG(`Шаг ${ganStep}: Генератор качество = ${genQual.toFixed(2)}, `+
+         `Дискриминатор точность = ${discAcc.toFixed(2)}`);
+    document.getElementById('ganGen').disabled = false;
+  };
+  document.getElementById('ganGen').onclick = ()=>{
+    drawGAN();
+    logG(`Generate: Генератор нарисовал новое изображение `+
+         `(цвет-зелёный→реальность, красный→фейк, mix=${genQual.toFixed(2)})`);
+  };
+  document.getElementById('ganReset').onclick = ()=>{
+    genQual=0.2; discAcc=0.8; ganStep=0;
+    drawGAN();
+    logGAN.textContent = 'Журнал GAN: жми «Train GAN Step».';
+    document.getElementById('ganGen').disabled = true;
+  };
+  // инициализация
+  ganReset.onclick = document.getElementById('ganReset').onclick;
+  drawGAN();
+
+  // ===== VAE Demo =====
+  const logVAE = document.getElementById('logVAE');
+  let latentMean=0, latentVar=1, encoded=false;
+  function logV(msg){
+    logVAE.textContent = msg + '\n\n' + logVAE.textContent;
+  }
+  document.getElementById('vaeEncode').onclick = ()=>{
+    // возьмём простой вход x=2.5
+    const x = 2.5;
+    latentMean = x * 0.6;            // dummy mean
+    latentVar  = Math.abs(x - 1.0); // dummy var
+    encoded = true;
+    logV(`Encode:\n  x = ${x}\n  mean = x·0.6 = ${latentMean.toFixed(2)}\n  var = |x−1.0| = ${latentVar.toFixed(2)}`);
+    document.getElementById('vaeDecode').disabled = false;
+  };
+  document.getElementById('vaeDecode').onclick = ()=>{
+    if(!encoded) return;
+    // sample z ~ N(mean,var)
+    const z = latentMean + Math.sqrt(latentVar)* (Math.random()*2-1);
+    const xRec = z * 1.2; // dummy decode
+    logV(`Decode:\n  sample z = mean ±√var·eps = ${z.toFixed(2)}\n  recon x\' = z·1.2 = ${xRec.toFixed(2)}`);
+  };
+  document.getElementById('vaeReset').onclick = ()=>{
+    latentMean=0; latentVar=1; encoded=false;
+    logVAE.textContent = 'Журнал VAE: Encode → получаем mean и var, затем Decode.';
+    document.getElementById('vaeDecode').disabled = true;
+  };
+  document.getElementById('vaeReset').onclick();
+
+  // ===== Diffusion Demo =====
+  const diffCanvas = document.getElementById('diffCanvas'),
+        ctxD = diffCanvas.getContext('2d'),
+        logDiff = document.getElementById('logDiff');
+  let diffStep = 0;
+  function drawNoise(){
+    const img = ctxD.createImageData(300,300);
+    for(let i=0;i<img.data.length;i+=4){
+      const v = Math.random()*255;
+      img.data[i]=img.data[i+1]=img.data[i+2]=v;
+      img.data[i+3]=255;
+    }
+    ctxD.putImageData(img,0,0);
+  }
+  function drawShape(alpha=1){
+    ctxD.globalAlpha = alpha;
+    ctxD.fillStyle = '#ffeb3b';
+    ctxD.beginPath();
+    ctxD.arc(150,150,80,0,2*Math.PI);
+    ctxD.fill();
+    ctxD.globalAlpha = 1;
+  }
+  function logDiffusion(msg){
+    logDiff.textContent = msg + '\n\n' + logDiff.textContent;
+  }
+  document.getElementById('diffStep1').onclick = ()=>{
+    diffStep=1;
+    drawNoise();
+    logDiffusion('Step 1: Начальный шум (белый шум).');
+    document.getElementById('diffStep2').disabled = false;
+  };
+  document.getElementById('diffStep2').onclick = ()=>{
+    diffStep=2;
+    drawNoise();
+    drawShape(0.4);
+    logDiffusion('Step 2: Добавили 40% исходного образа (полутонированный круг).');
+    document.getElementById('diffStep3').disabled = false;
+  };
+  document.getElementById('diffStep3').onclick = ()=>{
+    diffStep=3;
+    drawShape(1);
+    logDiffusion('Step 3: Полностью очистили шум, получился яркий круг 🔵.');
+  };
+  document.getElementById('diffReset').onclick = ()=>{
+    diffStep=0;
+    ctxD.clearRect(0,0,300,300);
+    logDiff.textContent = 'Журнал Diffusion: шаги показывают, как шум превращается в образ.';
+    document.getElementById('diffStep2').disabled = true;
+    document.getElementById('diffStep3').disabled = true;
+  };
+  document.getElementById('diffReset').onclick();
+</script>
+
+</body>
+</html>

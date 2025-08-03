@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Train / Val / Test Split «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls button {
+      margin: 0 6px;
+      padding: 8px 14px;
+      font-size: 1rem;
+    }
+    #log {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Train / Validation / Test Split</h1>
+  <p style="text-align:center;">〚📚✍️🎓〛 — учимся, проверяем дома, сдаём экзамен</p>
+
+  <h2>Исходный набор данных</h2>
+  <div id="orig-container"></div>
+
+  <div class="controls">
+    <button id="btnSplit">Разделить на Train/Val/Test</button>
+    <button id="btnReset" disabled>Сбросить</button>
+  </div>
+
+  <div id="log">Журнал: нажмите «Разделить» для начала.</div>
+
+  <h2>Train (80%)</h2>
+  <div id="train-container"></div>
+
+  <h2>Validation (10%)</h2>
+  <div id="val-container"></div>
+
+  <h2>Test (10%)</h2>
+  <div id="test-container"></div>
+
+  <script>
+    // Генерируем исходные 20 записей
+    const originalData = Array.from({length:20},(_,i)=>({
+      id: i+1,
+      feature: (Math.random()*100).toFixed(1)
+    }));
+    let data = [];
+
+    const origDiv = document.getElementById('orig-container');
+    const trainDiv = document.getElementById('train-container');
+    const valDiv   = document.getElementById('val-container');
+    const testDiv  = document.getElementById('test-container');
+    const logEl    = document.getElementById('log');
+    const btnSplit = document.getElementById('btnSplit');
+    const btnReset = document.getElementById('btnReset');
+
+    function renderTable(container, arr) {
+      if (!arr) { container.innerHTML = ''; return; }
+      let html = '<table><tr><th>#</th><th>ID</th><th>Feature</th></tr>';
+      arr.forEach((r,i)=>{
+        html += `<tr><td>${i+1}</td><td>${r.id}</td><td>${r.feature}</td></tr>`;
+      });
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    // начальный рендер
+    function resetAll(){
+      data = originalData.slice();
+      renderTable(origDiv, data);
+      renderTable(trainDiv, null);
+      renderTable(valDiv, null);
+      renderTable(testDiv, null);
+      logEl.textContent = `Всего записей: ${data.length}\n` +
+        `Нажмите «Разделить» для получения: \n` +
+        `  • Train – 80% (учимся)\n` +
+        `  • Val   – 10% (пробные тесты)\n` +
+        `  • Test  – 10% (финальный экзамен)`;
+      btnReset.disabled = true;
+      btnSplit.disabled = false;
+    }
+    resetAll();
+
+    // Фишка: перемешиваем массив
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+    }
+
+    btnSplit.onclick = ()=>{
+      shuffle(data);
+      const n = data.length;
+      const nTrain = Math.floor(0.8 * n);
+      const nVal   = Math.floor(0.1 * n);
+      const nTest  = n - nTrain - nVal;
+      const train = data.slice(0, nTrain);
+      const val   = data.slice(nTrain, nTrain + nVal);
+      const test  = data.slice(nTrain + nVal);
+      // логика
+      logEl.textContent =
+`Случайно перемешали данные.
+Всего: ${n} записей.
+
+Train size  = 80% · ${n} = ${nTrain}
+Validation size = 10% · ${n} = ${nVal}
+Test size   = остальное = ${nTest}
+
+Нажмите «Сбросить», чтобы вернуть исходные данные.`;
+      // отрисовка
+      renderTable(trainDiv, train);
+      renderTable(valDiv,   val);
+      renderTable(testDiv,  test);
+      btnReset.disabled = false;
+      btnSplit.disabled = true;
+    };
+
+    btnReset.onclick = resetAll;
+  </script>
+
+</body>
+</html>

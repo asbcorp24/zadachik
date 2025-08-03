@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Semi-Supervised Learning «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    #canvas {
+      display: block;
+      margin: 10px auto;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls button {
+      margin: 0 6px;
+      padding: 6px 12px;
+      font-size: 1rem;
+    }
+    #log {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Semi-Supervised Learning для дурачков</h1>
+  <p style="text-align:center;">
+    📚 Есть немного подписанных книг и куча без названий.<br>
+    Мы учимся на размеченных, потом сами подписываем остальные!
+  </p>
+
+  <h2>Пример: 2D-точки</h2>
+  <canvas id="canvas" width="400" height="400"></canvas>
+
+  <div class="controls">
+    <button id="step1">Шаг 1: Обучиться на размеченных</button>
+    <button id="step2" disabled>Шаг 2: Предсказать на неразмеченных</button>
+    <button id="step3" disabled>Шаг 3: Псевдо-маркировка (thr=0.3)</button>
+    <button id="step4" disabled>Шаг 4: Дообучение</button>
+    <button id="reset">Сбросить</button>
+  </div>
+
+  <div id="log">Журнал: жмите «Шаг 1».</div>
+
+  <script>
+  // === Данные ===
+  const labeled = [
+    {x:  80, y:  80, label: 'A'}, 
+    {x: 100, y:  60, label: 'A'},
+    {x:  60, y: 120, label: 'A'},
+    {x: 300, y: 300, label: 'B'},
+    {x: 320, y: 280, label: 'B'},
+    {x: 280, y: 320, label: 'B'}
+  ];
+  const unlabeled = [
+    {x: 200, y:  90, label: null},
+    {x: 220, y: 120, label: null},
+    {x: 120, y: 250, label: null},
+    {x: 260, y: 200, label: null}
+  ];
+  let centroids = {};
+  let predictions = [];  // { index, pred, dA, dB, conf }
+  const threshold = 0.3;
+
+  // === Canvas ===
+  const canvas = document.getElementById('canvas'),
+        ctx    = canvas.getContext('2d'),
+        logEl  = document.getElementById('log');
+
+  function draw() {
+    ctx.clearRect(0,0,400,400);
+    // Labeled
+    labeled.forEach(p=>{
+      ctx.fillStyle = p.label==='A'? '#e63946':'#457b9d';
+      ctx.beginPath(); ctx.arc(p.x,p.y,6,0,2*Math.PI); ctx.fill();
+    });
+    // Unlabeled or now pseudo-labeled
+    unlabeled.forEach(p=>{
+      let color = '#999';
+      if(p.label==='A') color='#e63946';
+      if(p.label==='B') color='#457b9d';
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(p.x,p.y,6,0,2*Math.PI); ctx.fill();
+      if(p.label===null){
+        ctx.strokeStyle='#000'; ctx.setLineDash([4,2]);
+        ctx.beginPath(); ctx.arc(p.x,p.y,8,0,2*Math.PI); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+    // Centroids
+    if(centroids.A){
+      ctx.fillStyle='#e63946';
+      ctx.fillRect(centroids.A.x-8,centroids.A.y-8,16,16);
+    }
+    if(centroids.B){
+      ctx.fillStyle='#457b9d';
+      ctx.fillRect(centroids.B.x-8,centroids.B.y-8,16,16);
+    }
+  }
+
+  function log(msg){
+    logEl.textContent = msg + '\n\n' + logEl.textContent;
+  }
+
+  // === Шаг 1: обучение на размеченных ===
+  document.getElementById('step1').onclick = ()=>{
+    // считаем средние для A и B
+    ['A','B'].forEach(cl=>{
+      const pts = labeled.filter(p=>p.label===cl);
+      const mx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
+      const my = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+      centroids[cl] = {x: mx, y: my};
+    });
+    draw();
+    let msg = `Шаг 1: обучились на размеченных.\n`+
+              `Центроид A = (${centroids.A.x.toFixed(1)}, ${centroids.A.y.toFixed(1)})\n`+
+              `Центроид B = (${centroids.B.x.toFixed(1)}, ${centroids.B.y.toFixed(1)})`;
+    log(msg);
+    document.getElementById('step2').disabled = false;
+  };
+
+  // === Шаг 2: предсказание на неразмеченных ===
+  document.getElementById('step2').onclick = ()=>{
+    predictions = unlabeled.map((p,i)=>{
+      const dA = Math.hypot(p.x-centroids.A.x, p.y-centroids.A.y);
+      const dB = Math.hypot(p.x-centroids.B.x, p.y-centroids.B.y);
+      const conf = Math.abs(dA-dB)/(dA+dB);
+      return { index: i, dA, dB, conf };
+    });
+    let msg = `Шаг 2: предсказываем на неразмеченных.\n`;
+    predictions.forEach(pr=>{
+      msg += `  Точка${pr.index}: dA=${pr.dA.toFixed(1)}, dB=${pr.dB.toFixed(1)}, `+
+             `conf=${pr.conf.toFixed(2)}\n`;
+    });
+    log(msg);
+    document.getElementById('step3').disabled = false;
+  };
+
+  // === Шаг 3: псевдо-маркировка ===
+  document.getElementById('step3').onclick = ()=>{
+    let msg = `Шаг 3: псевдо-маркировка (thr=${threshold})\n`;
+    predictions.forEach(pr=>{
+      if(pr.conf >= threshold){
+        const lab = pr.dA<pr.dB? 'A':'B';
+        unlabeled[pr.index].label = lab;
+        msg += `  Точка${pr.index} помечена как ${lab} (conf=${pr.conf.toFixed(2)})\n`;
+      } else {
+        msg += `  Точка${pr.index} НЕ помечена (conf=${pr.conf.toFixed(2)})\n`;
+      }
+    });
+    draw();
+    log(msg);
+    document.getElementById('step4').disabled = false;
+  };
+
+  // === Шаг 4: дообучение с псевдо-метками ===
+  document.getElementById('step4').onclick = ()=>{
+    // добавляем псевдо-метки к labeled
+    unlabeled.forEach(p=> {
+      if(p.label) labeled.push({...p});
+    });
+    // пересчитаем центроиды
+    ['A','B'].forEach(cl=>{
+      const pts = labeled.filter(p=>p.label===cl);
+      const mx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
+      const my = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+      centroids[cl] = {x: mx, y: my};
+    });
+    draw();
+    let msg = `Шаг 4: дообучились с псевдо-метками.\n`+
+              `Новые центроиды:\n`+
+              `  A = (${centroids.A.x.toFixed(1)},${centroids.A.y.toFixed(1)})\n`+
+              `  B = (${centroids.B.x.toFixed(1)},${centroids.B.y.toFixed(1)})`;
+    log(msg);
+  };
+
+  // === Сброс ===
+  document.getElementById('reset').onclick = ()=>{
+    // восстановить исходное состояние
+    while(labeled.length>6) labeled.pop();
+    unlabeled.forEach(p=> p.label = null);
+    centroids = {};
+    predictions = [];
+    draw();
+    logEl.textContent = 'Журнал: жмите «Шаг 1».';
+    document.getElementById('step2').disabled = true;
+    document.getElementById('step3').disabled = true;
+    document.getElementById('step4').disabled = true;
+  };
+
+  // initial draw
+  draw();
+  </script>
+</body>
+</html>

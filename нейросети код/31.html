@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Обработка пропусков (NaN) «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      line-height: 1.4;
+      padding: 0 15px;
+    }
+    h1, h2 { text-align: center; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls button {
+      font-size: 1rem;
+      padding: 6px 12px;
+      margin: 0 6px;
+    }
+    #log {
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Пропуски в данных (NaN)</h1>
+  <p>Пустые поля в анкетах: Имя, Возраст, Доход. В программировании — NaN.</p>
+
+  <h2>Исходные данные</h2>
+  <div id="table-container"></div>
+
+  <div class="controls">
+    <button id="btnDelete">1. Удалить строки с пропусками</button>
+    <button id="btnFill">2. Заполнить средними</button>
+    <button id="btnFlag">3. Добавить признак "пропущено"</button>
+    <button id="btnReset" disabled>Сбросить</button>
+  </div>
+
+  <h2>Журнал действий</h2>
+  <div id="log">Журнал: выбери действие выше.</div>
+
+  <script>
+    // Исходный набор с NaN (null)
+    const originalData = [
+      {name:"Иван", age:25,   income:50000},
+      {name:"Оля",  age:null, income:62000},
+      {name:"Петя", age:30,   income:null},
+      {name:"Маша", age:22,   income:45000},
+      {name:"Коля", age:null, income:null}
+    ];
+
+    let data = [];
+
+    const container = document.getElementById('table-container');
+    const logEl     = document.getElementById('log');
+    const btnDel    = document.getElementById('btnDelete');
+    const btnFill   = document.getElementById('btnFill');
+    const btnFlag   = document.getElementById('btnFlag');
+    const btnReset  = document.getElementById('btnReset');
+
+    // Отрисовать таблицу
+    function renderTable(tblData) {
+      let html = '<table><tr><th>Имя</th><th>Возраст</th><th>Доход</th>';
+      if (tblData[0].hasOwnProperty('age_missing')) {
+        html += '<th>age_missing</th><th>income_missing</th>';
+      }
+      html += '</tr>';
+      tblData.forEach(row => {
+        html += '<tr>'+
+          `<td>${row.name}</td>`+
+          `<td>${row.age===null?'NaN':row.age}</td>`+
+          `<td>${row.income===null?'NaN':row.income}</td>`;
+        if (row.hasOwnProperty('age_missing')) {
+          html += `<td>${row.age_missing}</td><td>${row.income_missing}</td>`;
+        }
+        html += '</tr>`;
+      });
+      html += '</table>';
+      container.innerHTML = html;
+    }
+
+    // Сброс
+    btnReset.onclick = () => {
+      data = JSON.parse(JSON.stringify(originalData));
+      renderTable(data);
+      logEl.textContent = 'Журнал: выбери действие выше.';
+      btnReset.disabled = true;
+      btnDel.disabled   = false;
+      btnFill.disabled  = false;
+      btnFlag.disabled  = false;
+    };
+
+    // Инициализация
+    btnReset.onclick();
+
+    // 1. Удаление строк с пропусками
+    btnDel.onclick = () => {
+      const before = data.length;
+      data = data.filter(r => r.age !== null && r.income !== null);
+      const after = data.length;
+      renderTable(data);
+      logEl.textContent = 
+        `Удаляем строки с любыми NaN:\n`+
+        `До: ${before} строк\n`+
+        `После: ${after} строк\n`+
+        `Удалено: ${before-after} строк`;
+      btnReset.disabled = false;
+      btnDel.disabled   = true;
+      btnFill.disabled  = true;
+      btnFlag.disabled  = true;
+    };
+
+    // 2. Заполнение средними
+    btnFill.onclick = () => {
+      // вычисляем среднее по непустым
+      const ages   = data.map(r=>r.age).filter(v=>v!==null);
+      const incs   = data.map(r=>r.income).filter(v=>v!==null);
+      const meanAge  = ages.reduce((a,b)=>a+b,0)/ages.length;
+      const meanInc  = incs.reduce((a,b)=>a+b,0)/incs.length;
+      logEl.textContent = 
+        `Заполняем NaN средними:\n`+
+        `mean(age) = (${ages.join('+')})/${ages.length} = ${meanAge.toFixed(2)}\n`+
+        `mean(income) = (${incs.join('+')})/${incs.length} = ${meanInc.toFixed(2)}\n\n`+
+        `Данные до заполнения:\n`+
+        `${JSON.stringify(data)}\n\n`+
+        `Данные после заполнения:`;
+      // заполняем
+      data = data.map(r=>({
+        name: r.name,
+        age:   r.age   === null ? meanAge : r.age,
+        income:r.income=== null ? meanInc : r.income
+      }));
+      renderTable(data);
+      logEl.textContent += `\n${JSON.stringify(data)}`;
+      btnReset.disabled = false;
+      btnDel.disabled   = true;
+      btnFill.disabled  = true;
+      btnFlag.disabled  = true;
+    };
+
+    // 3. Добавление признака пропуска
+    btnFlag.onclick = () => {
+      data = data.map(r=>{
+        return {
+          name: r.name,
+          age: r.age,
+          income: r.income,
+          age_missing:    r.age   === null ? 1 : 0,
+          income_missing: r.income=== null ? 1 : 0
+        };
+      });
+      renderTable(data);
+      const missAge  = data.reduce((a,r)=>a+r.age_missing,0);
+      const missInc  = data.reduce((a,r)=>a+r.income_missing,0);
+      logEl.textContent =
+        `Добавляем индикаторы:\n`+
+        `age_missing = 1 если возраст NaN иначе 0\n`+
+        `income_missing = 1 если доход NaN иначе 0\n\n`+
+        `Пропущенных age: ${missAge}, income: ${missInc}`;
+      btnReset.disabled = false;
+      btnDel.disabled   = true;
+      btnFill.disabled  = true;
+      btnFlag.disabled  = true;
+    };
+  </script>
+
+</body>
+</html>

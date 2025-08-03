@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо: Градиентный спуск «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 720px;
+      margin: 30px auto;
+      line-height: 1.4;
+      padding: 0 15px;
+    }
+    h1 { text-align: center; }
+    .controls {
+      margin: 20px 0;
+      text-align: center;
+    }
+    input {
+      width: 60px;
+      font-size: 1rem;
+      padding: 4px;
+      margin: 0 8px;
+    }
+    button {
+      font-size: 1rem;
+      padding: 6px 12px;
+      margin: 0 8px;
+    }
+    #plot {
+      display: block;
+      margin: 0 auto;
+      background: #fafafa;
+      border: 1px solid #ccc;
+    }
+    #info {
+      margin-top: 20px;
+      background: #f5f5f5;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Как нейросеть спускается вниз по ошибке</h1>
+
+  <p>Ошибка задаём простой функцией <strong>f(x) = x²</strong> — низкое значение f(x) = мало ошибки.</p>
+  <p>Нейросеть стартует на склоне, вычисляет градиент (производную), делает маленький шаг вниз, и так пока не достигнет дна.</p>
+
+  <div class="controls">
+    <label>Стартовое x: <input type="number" id="initX" value="4" step="0.1"></label>
+    <label>Шаг (α): <input type="number" id="lr" value="0.1" step="0.01"></label>
+    <button id="startBtn">Начать демонстрацию</button>
+    <button id="nextBtn" disabled>Следующий шаг</button>
+    <button id="resetBtn" disabled>Сбросить</button>
+  </div>
+
+  <canvas id="plot" width="600" height="300"></canvas>
+  <div id="info">Нажми «Начать демонстрацию», чтобы увидеть первый шаг.</div>
+
+  <script>
+    const canvas = document.getElementById('plot');
+    const ctx = canvas.getContext('2d');
+    const info = document.getElementById('info');
+    const startBtn = document.getElementById('startBtn');
+    const nextBtn  = document.getElementById('nextBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const initXIn  = document.getElementById('initX');
+    const lrIn     = document.getElementById('lr');
+
+    let x = 0, lr = 0.1, step = 0;
+
+    // Отрисовка координат и параболы f(x)=x^2
+    function drawPlot() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0,0,W,H);
+      // координатные оси
+      ctx.strokeStyle = '#888';
+      ctx.beginPath(); // x-axis
+      ctx.moveTo(0, H/2);
+      ctx.lineTo(W, H/2);
+      ctx.moveTo(W/2, 0); // y-axis
+      ctx.lineTo(W/2, H);
+      ctx.stroke();
+
+      // парабола y = x^2, масштаб x: [-5..5]→[0..W], y: [0..25]→[H/2..0]
+      ctx.strokeStyle = '#007ACC';
+      ctx.beginPath();
+      for (let px = 0; px <= W; px++) {
+        const xv = (px/W)*10 - 5; // -5..5
+        const yv = xv*xv;         // 0..25
+        const py = H/2 - (yv/25)*(H/2);
+        if (px===0) ctx.moveTo(px,py);
+        else        ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+    }
+
+    // Перевод x→canvas
+    function xToPx(xv) {
+      return ((xv + 5)/10) * canvas.width;
+    }
+
+    // Перевод f(x)→canvas
+    function yToPy(yv) {
+      return canvas.height/2 - (yv/25)*(canvas.height/2);
+    }
+
+    function drawPoint(xv, color='#E63946') {
+      const px = xToPx(xv);
+      const py = yToPy(xv*xv);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 2*Math.PI);
+      ctx.fill();
+    }
+
+    function updateInfo(msg) {
+      info.textContent = msg;
+    }
+
+    function startDemo() {
+      x = parseFloat(initXIn.value);
+      lr = parseFloat(lrIn.value);
+      step = 0;
+      drawPlot();
+      drawPoint(x, '#E63946');
+      const fx = (x*x).toFixed(4);
+      const grad = (2*x).toFixed(4);
+      updateInfo(
+`Шаг ${step} — Старт:
+  x = ${x.toFixed(4)}
+  f(x) = x² = ${fx}
+  Градиент f'(x) = 2·x = ${grad}
+
+Нажми «Следующий шаг», чтобы спуститься вниз.`
+      );
+      startBtn.disabled = true;
+      nextBtn.disabled = false;
+      resetBtn.disabled = false;
+    }
+
+    function nextStep() {
+      const grad = 2*x;
+      const xNew = x - lr * grad;
+      const fx = (x*x).toFixed(4);
+      const gradTxt = grad.toFixed(4);
+      const xNewTxt = xNew.toFixed(4);
+      const fxNew = (xNew*xNew).toFixed(4);
+      step++;
+      drawPlot();
+      // рисуем старую точку серой, новую — красной
+      drawPoint(x, '#999');
+      drawPoint(xNew, '#E63946');
+      updateInfo(
+`Шаг ${step} — Градиентный спуск:
+  Текущий x = ${x.toFixed(4)}, f(x) = ${fx}
+  Градиент f'(x) = 2·x = ${gradTxt}
+  Шаг: x_new = x − α·grad = ${x.toFixed(4)} − ${lr}·${gradTxt} = ${xNewTxt}
+  Новая ошибка f(x_new) = ${xNewTxt}² = ${fxNew}
+
+Нажми «Следующий шаг», чтобы продолжить.`
+      );
+      x = xNew;
+    }
+
+    function resetDemo() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      updateInfo('Нажми «Начать демонстрацию», чтобы увидеть первый шаг.');
+      startBtn.disabled = false;
+      nextBtn.disabled = true;
+      resetBtn.disabled = true;
+    }
+
+    startBtn.addEventListener('click', startDemo);
+    nextBtn.addEventListener('click', nextStep);
+    resetBtn.addEventListener('click', resetDemo);
+
+    // начальный отрис
+    drawPlot();
+  </script>
+
+</body>
+</html>

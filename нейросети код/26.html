@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо: Полный цикл обучения MNIST «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      line-height: 1.4;
+      padding: 0 15px;
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    #stage {
+      background: #f0f0f0;
+      padding: 20px;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      text-align: center;
+      min-height: 60px;
+    }
+    #desc {
+      background: #fafafa;
+      padding: 15px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-line;
+    }
+    .controls {
+      text-align: center;
+      margin: 20px 0;
+    }
+    button {
+      font-size: 1rem;
+      padding: 8px 16px;
+      margin: 0 8px;
+    }
+    #canvas {
+      display: block;
+      margin: 20px auto;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Обучение нейросети на MNIST: шаг за шагом</h1>
+  <div id="stage">Нажми «Начать»</div>
+  <div id="desc">Здесь появятся примеры расчётов и пояснения.</div>
+
+  <div class="controls">
+    <button id="startBtn">Начать</button>
+    <button id="nextBtn" disabled>Следующий шаг</button>
+    <button id="resetBtn" disabled>Сбросить</button>
+  </div>
+
+  <canvas id="canvas" width="700" height="300" style="display:none;"></canvas>
+
+  <script>
+    const steps = [
+      {
+        title: "Шаг 1: Архитектура сети 🖼️➔🧠",
+        desc:
+`Сеть для MNIST:
+  • Вход: 28×28=784 пикселя
+  • Скрытые слои: 128 → 64
+  • Выход: 10 чисел (0…9)  
+Эмодзи: 🖼️ ➔ [784→128→64→10] ➔ [0,1,…,9]`
+      },
+      {
+        title: "Шаг 2: Forward pass (прямой проход)",
+        desc:
+`Возьмём один пример:  
+x[0]=0.2, x[1]=0.5, … (784 значений)  
+W1[0] пример: [0.1, –0.2, …]  
+b1[0] = 0.0  
+z1 = x·W1[0] + b1[0] = 0.2·0.1 + 0.5·(–0.2) + … = –0.08  
+a1 = ReLU(z1) = max(0,–0.08) = 0.0  
+… (так для всех 128 нейронов)  
+Эмодзи: 🏀🎯 (целимся и бросаем → смотрим результат)`
+      },
+      {
+        title: "Шаг 3: Dropout 20% 🙈",
+        desc:
+`Пусть p=0.2 → keep=0.8  
+Генерируем маску для 128 нейронов, например первые 3: [1,0,1,…]  
+a1_raw = [0.5,0.3,0.8,…]  
+После Dropout:  
+  a1[0]=0.5/0.8=0.625  
+  a1[1]=0·(что было)*…=0  
+  a1[2]=0.8/0.8=1.0  
+…  
+Эмодзи: 🧠🙈 (часть нейронов «спит»)`
+      },
+      {
+        title: "Шаг 4: BatchNorm 🧹",
+        desc:
+`Берём 3 первых значения после Dropout: [0.625,0,1.0]  
+μ = (0.625+0+1.0)/3 ≈0.542  
+σ² = ((0.625–0.542)²+…)/3 ≈0.081  
+Нормируем:  
+  (0.625–0.542)/√(0.081+ε) ≈0.29  
+  (0–0.542)/… ≈–1.90  
+  (1.0–0.542)/… ≈0.51  
+… (для всех 128)  
+Эмодзи: 🧹📚 (чистим и выравниваем)`
+      },
+      {
+        title: "Шаг 5: L2-регуляризация ⚖️",
+        desc:
+`Весов в сети много, но для примера возьмём 3: [0.1, –0.2, 0.3]  
+λ = 0.01  
+L2-штраф = λ·∑w² = 0.01·(0.01+0.04+0.09) = 0.0014  
+Итоговый Loss = основная ошибка + 0.0014  
+Эмодзи: 📏 (штрафуем «жадные» веса)`
+      },
+      {
+        title: "Шаг 6: Обновление Adam 🏃‍♂️⚡",
+        desc:
+`Пусть текущий градиент g=0.2  
+β₁=0.9, β₂=0.999, ε=1e–8  
+m = 0.9·m_prev + 0.1·g = 0.02  
+v = 0.999·v_prev + 0.001·g² = 0.00004  
+m̂ = m/(1–0.9¹)=0.02/0.1=0.2  
+v̂ = v/(1–0.999¹)=0.00004/0.001=0.04  
+lr=0.001  
+ΔW = –lr·m̂/(√v̂+ε) ≈ –0.001  
+Новый W = W_old + ΔW  
+Эмодзи: 🏔️🧭 (умно шагаем вниз)`
+      },
+      {
+        title: "Шаг 7: Early Stopping 🛑",
+        desc:
+`Эпохи:                1     2     3     4     5     6
+Train Loss:        [0.90, 0.70, 0.50, 0.40, 0.35, 0.34]
+Val Loss:          [0.92, 0.75, 0.52, 0.42, 0.38, 0.39]  
+На эпохе 6 Val Loss ↑ (0.39>0.38) → стоп!  
+Сохраняем модель после эпохи 5  
+Эмодзи: 🕰️ (останавливаем вовремя)`
+      },
+      {
+        title: "Итоговый цикл обучения ✔️",
+        desc:
+`1. Данные MNIST ➔ 784‐вектор  
+2. Forward pass  
+3. Dropout + BatchNorm  
+4. Loss + L2 штраф  
+5. Backprop + Adam  
+6. Каждый epoch проверяем Val Loss  
+7. EarlyStopping останавливает на лучшем  
+Результат: сеть, которая быстро и честно распознаёт цифры!`
+      }
+    ];
+
+    let cur = -1;
+    const stageEl = document.getElementById('stage');
+    const descEl  = document.getElementById('desc');
+    const startBtn= document.getElementById('startBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const resetBtn= document.getElementById('resetBtn');
+    const canvas  = document.getElementById('canvas');
+    const ctx     = canvas.getContext('2d');
+
+    function showStep() {
+      const s = steps[cur];
+      stageEl.textContent = s.title;
+      descEl.textContent  = s.desc;
+      // На шаге 7 — покажем график Val vs Train
+      if (cur === 6) {
+        canvas.style.display = 'block';
+        drawLossChart();
+      } else {
+        canvas.style.display = 'none';
+      }
+    }
+
+    function drawLossChart() {
+      // простая линия как в описании
+      const train = [0.90,0.70,0.50,0.40,0.35,0.34];
+      const val   = [0.92,0.75,0.52,0.42,0.38,0.39];
+      const W=canvas.width, H=canvas.height;
+      ctx.clearRect(0,0,W,H);
+      // оси
+      ctx.strokeStyle='#888';
+      ctx.beginPath();
+      ctx.moveTo(40,H-30); ctx.lineTo(W-20,H-30);
+      ctx.moveTo(40,20);   ctx.lineTo(40,H-30);
+      ctx.stroke();
+      // линии
+      function x(i){ return 40 + i*(W-60)/(train.length-1); }
+      function y(v){ return 20 + (1-v)*(H-50); }
+      // train
+      ctx.strokeStyle='#007ACC'; ctx.lineWidth=2;
+      ctx.beginPath();
+      train.forEach((v,i)=> i===0? ctx.moveTo(x(i),y(v)) : ctx.lineTo(x(i),y(v)));
+      ctx.stroke();
+      // val
+      ctx.strokeStyle='#D62828'; ctx.beginPath();
+      val.forEach((v,i)=> i===0? ctx.moveTo(x(i),y(v)) : ctx.lineTo(x(i),y(v)));
+      ctx.stroke();
+      // легенда
+      ctx.fillStyle='#007ACC'; ctx.fillRect(W-140,40,12,12);
+      ctx.fillStyle='#000';     ctx.fillText('Train',W-120,50);
+      ctx.fillStyle='#D62828'; ctx.fillRect(W-140,60,12,12);
+      ctx.fillStyle='#000';     ctx.fillText('Val',W-120,70);
+    }
+
+    startBtn.onclick = ()=>{
+      cur = 0; showStep();
+      startBtn.disabled = true;
+      nextBtn.disabled = false;
+      resetBtn.disabled = false;
+    };
+    nextBtn.onclick = ()=>{
+      if (cur < steps.length-1) cur++;
+      showStep();
+      if (cur === steps.length-1) nextBtn.disabled = true;
+    };
+    resetBtn.onclick = ()=>{
+      cur = -1;
+      stageEl.textContent = 'Нажми «Начать»';
+      descEl.textContent  = 'Здесь появятся примеры расчётов и пояснения.';
+      canvas.style.display = 'none';
+      startBtn.disabled = false;
+      nextBtn.disabled = true;
+      resetBtn.disabled = true;
+    };
+  </script>
+
+</body>
+</html>

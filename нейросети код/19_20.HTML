@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо Attention «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 30px auto;
+      line-height: 1.5;
+      padding: 0 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #instruction {
+      background: #f0f8ff;
+      padding: 10px;
+      border-left: 4px solid #40a9ff;
+      margin-bottom: 20px;
+    }
+    #sentence {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+    #sentence span {
+      cursor: pointer;
+      padding: 4px 8px;
+      margin-right: 4px;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    #sentence span:hover {
+      background: #e6f7ff;
+    }
+    #sentence .active {
+      background: #bae7ff;
+    }
+    #attn-graph {
+      margin-top: 20px;
+    }
+    .bar-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .bar-label {
+      width: 80px;
+      text-align: right;
+      margin-right: 10px;
+      font-size: 0.95rem;
+    }
+    .bar {
+      height: 20px;
+      background: #40a9ff;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    #note {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Как работает Attention в GPT</h1>
+
+  <div id="instruction">
+    <strong>Кликни на слово</strong> в этом предложении, чтобы увидеть, на какие другие слова оно «обращает внимание» (и с какой силой).
+  </div>
+
+  <div id="sentence">
+    <!-- Слова будут вставлены скриптом -->
+  </div>
+
+  <div id="attn-graph">
+    <!-- График внимания появится здесь -->
+  </div>
+
+  <div id="note">
+    <em>Здесь веса заданы для примера. В реальной модели они вычисляются динамически из эмбеддингов и внимания.</em>
+  </div>
+
+  <script>
+    // Исходное предложение
+    const words = ["Кот", "ест", "пиццу", "на", "пляже"];
+
+    // Примерные attention- веса: attention[from][to] = [0..1]
+    const attention = {
+      "Кот":   {"Кот":0.05, "ест":0.7,  "пиццу":0.9,  "на":0.1,  "пляже":0.2},
+      "ест":   {"Кот":0.6,  "ест":0.05, "пиццу":0.85, "на":0.1,  "пляже":0.15},
+      "пиццу": {"Кот":0.3,  "ест":0.7,  "пиццу":0.05, "на":0.1,  "пляже":0.4},
+      "на":    {"Кот":0.1,  "ест":0.1,  "пиццу":0.2,  "на":0.05, "пляже":0.7},
+      "пляже": {"Кот":0.2,  "ест":0.15, "пиццу":0.45, "на":0.6,  "пляже":0.05}
+    };
+
+    const sentenceDiv = document.getElementById('sentence');
+    const graphDiv    = document.getElementById('attn-graph');
+
+    // Вставляем слова в предложение
+    words.forEach(w => {
+      const span = document.createElement('span');
+      span.textContent = w;
+      span.addEventListener('click', () => showAttention(w, span));
+      sentenceDiv.appendChild(span);
+    });
+
+    function showAttention(word, spanEl) {
+      // Сброс активного стиля у всех
+      document.querySelectorAll('#sentence span').forEach(el => el.classList.remove('active'));
+      // Подсветить выбранное
+      spanEl.classList.add('active');
+
+      // Получаем веса из attention[word]
+      const weights = attention[word];
+      // Очищаем график
+      graphDiv.innerHTML = `<h2>Внимание от слова «${word}»</h2>`;
+
+      // Для каждого слова строим бар
+      words.forEach(toWord => {
+        const w = weights[toWord];
+        const barContainer = document.createElement('div');
+        barContainer.className = 'bar-container';
+
+        const label = document.createElement('div');
+        label.className = 'bar-label';
+        label.textContent = toWord;
+
+        const barBg = document.createElement('div');
+        barBg.style.flex = '1';
+        barBg.style.background = '#f5f5f5';
+        barBg.style.borderRadius = '4px';
+        barBg.style.overflow = 'hidden';
+
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.width = (w * 100) + '%';
+        bar.textContent = (w * 100).toFixed(0) + '%';
+        bar.style.textAlign = 'right';
+        bar.style.paddingRight = '6px';
+        bar.style.color = '#fff';
+        barBg.appendChild(bar);
+
+        barContainer.appendChild(label);
+        barContainer.appendChild(barBg);
+
+        graphDiv.appendChild(barContainer);
+      });
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо RNN vs LSTM vs GRU «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      line-height: 1.4;
+      padding: 0 10px;
+    }
+    h1 { text-align: center; }
+    .controls {
+      margin: 20px 0;
+    }
+    input, button {
+      font-size: 1rem;
+      padding: 6px;
+      margin-right: 10px;
+    }
+    .section {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .section h2 {
+      margin-top: 0;
+    }
+    .memory {
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Как помнят слова RNN, LSTM и GRU</h1>
+
+  <div class="controls">
+    <label>
+      Введи предложение (слова через пробел):
+      <input type="text" id="inputText" size="40" value="Кот ест пиццу на пляже">
+    </label>
+    <button id="processBtn">Показать память сетей</button>
+  </div>
+
+  <div class="section" id="rnn-section">
+    <h2>Обычная RNN</h2>
+    <p>🔄 RNN читает слово за словом и <u>просто</u> запоминает всё подряд, без особых «ворот».</p>
+    <p>🧠 <strong>Память (все слова):</strong>
+      <span class="memory" id="rnn-memory">–</span>
+    </p>
+  </div>
+
+  <div class="section" id="lstm-section">
+    <h2>LSTM (Long Short-Term Memory)</h2>
+    <p>🚪 LSTM решает, что <u>оставить</u>, а что <u>забыть</u>. Здесь мы покажем только <strong>последние 4</strong> слова.</p>
+    <p>🧠 <strong>Память (последние 4 слова):</strong>
+      <span class="memory" id="lstm-memory">–</span>
+    </p>
+  </div>
+
+  <div class="section" id="gru-section">
+    <h2>GRU (Gated Recurrent Unit)</h2>
+    <p>🔑 GRU почти как LSTM, но проще. Показываем только <strong>последние 3</strong> слова.</p>
+    <p>🧠 <strong>Память (последние 3 слова):</strong>
+      <span class="memory" id="gru-memory">–</span>
+    </p>
+  </div>
+
+  <script>
+    document.getElementById('processBtn').addEventListener('click', () => {
+      const text = document.getElementById('inputText').value.trim();
+      if (!text) {
+        alert('Введите хотя бы одно слово!');
+        return;
+      }
+      const words = text.split(/\s+/);
+      // RNN: помнит все слова
+      document.getElementById('rnn-memory').textContent = words.join(', ');
+      // LSTM: оставляет последние 4
+      const lstmMem = words.slice(-4);
+      document.getElementById('lstm-memory').textContent = lstmMem.join(', ');
+      // GRU: оставляет последние 3
+      const gruMem = words.slice(-3);
+      document.getElementById('gru-memory').textContent = gruMem.join(', ');
+    });
+  </script>
+
+</body>
+</html>

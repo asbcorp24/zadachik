@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Иллюстрация работы нейрона</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; line-height: 1.6; }
+    h2 { margin-top: 40px; }
+    .slider-group { margin-bottom: 20px; }
+    .slider-group label { display: block; margin-bottom: 5px; }
+    .result { font-size: 1.2em; margin-top: 10px; }
+    .section { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin-bottom: 30px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
+    .emoji { font-size: 1.2em; vertical-align: middle; }
+  </style>
+</head>
+<body>
+  <h1>Иллюстрация работы нейрона</h1>
+  <div class="section" id="single-neuron">
+    <h2>1. Один нейрон (входы × веса + смещение → активация)</h2>
+    <div class="slider-group">
+      <label>Вход 1 (x₁) ✉️: <span id="in1-val">1</span></label>
+      <input type="range" id="in1" min="0" max="10" step="0.1" value="1">
+    </div>
+    <div class="slider-group">
+      <label>Вес 1 (w₁) ⚖️: <span id="w1-val">0.5</span></label>
+      <input type="range" id="w1" min="0" max="1" step="0.01" value="0.5">
+    </div>
+    <div class="slider-group">
+      <label>Вход 2 (x₂) ✉️: <span id="in2-val">5</span></label>
+      <input type="range" id="in2" min="0" max="10" step="0.1" value="5">
+    </div>
+    <div class="slider-group">
+      <label>Вес 2 (w₂) ⚖️: <span id="w2-val">0.9</span></label>
+      <input type="range" id="w2" min="0" max="1" step="0.01" value="0.9">
+    </div>
+    <div class="slider-group">
+      <label>Смещение (bias) 🎛️: <span id="b-val">-2</span></label>
+      <input type="range" id="b" min="-10" max="10" step="0.1" value="-2">
+    </div>
+    <div>
+      <label>Функция активации ⚡:</label>
+      <select id="activation">
+        <option value="step">Шаговая (Threshold)</option>
+        <option value="relu">ReLU</option>
+        <option value="sigmoid">Sigmoid</option>
+      </select>
+    </div>
+    <div class="result">
+      Сумма взвешенных входов: <span id="sum-val">0</span><br>
+      Вывод нейрона: <span id="out-val">0</span>
+    </div>
+  </div>
+
+  <div class="section" id="softmax-demo">
+    <h2>2. Пример Softmax (мультиклассовая вероятность)</h2>
+    <div class="slider-group">
+      <label>Баллы: Пицца 🍕: <span id="s1-val">10</span></label>
+      <input type="range" id="s1" min="0" max="20" step="1" value="10">
+    </div>
+    <div class="slider-group">
+      <label>Баллы: Суши 🍣: <span id="s2-val">5</span></label>
+      <input type="range" id="s2" min="0" max="20" step="1" value="5">
+    </div>
+    <div class="slider-group">
+      <label>Баллы: Салат 🥗: <span id="s3-val">1</span></label>
+      <input type="range" id="s3" min="0" max="20" step="1" value="1">
+    </div>
+    <div class="result">
+      Вероятности после Softmax:<br>
+      Пицца: <span id="p1">0</span>%<br>
+      Суши: <span id="p2">0</span>%<br>
+      Салат: <span id="p3">0</span>%
+    </div>
+  </div>
+
+  <script>
+    // Функции активации
+    function step(x) { return x > 0 ? 1 : 0; }
+    function relu(x) { return Math.max(0, x); }
+    function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+    function softmax(arr) {
+      const exps = arr.map(v => Math.exp(v));
+      const sum = exps.reduce((a,b) => a+b, 0);
+      return exps.map(v => v / sum);
+    }
+
+    // Обновление одиночного нейрона
+    function updateNeuron() {
+      const x1 = parseFloat(document.getElementById('in1').value);
+      const w1 = parseFloat(document.getElementById('w1').value);
+      const x2 = parseFloat(document.getElementById('in2').value);
+      const w2 = parseFloat(document.getElementById('w2').value);
+      const b  = parseFloat(document.getElementById('b').value);
+      const act = document.getElementById('activation').value;
+      // Обновление лейблов
+      document.getElementById('in1-val').innerText = x1;
+      document.getElementById('w1-val').innerText = w1;
+      document.getElementById('in2-val').innerText = x2;
+      document.getElementById('w2-val').innerText = w2;
+      document.getElementById('b-val').innerText  = b;
+      
+      const sum = x1*w1 + x2*w2 + b;
+      let out;
+      if (act === 'step') out = step(sum);
+      else if (act === 'relu') out = relu(sum);
+      else if (act === 'sigmoid') out = sigmoid(sum).toFixed(3);
+
+      document.getElementById('sum-val').innerText = sum.toFixed(3);
+      document.getElementById('out-val').innerText = out;
+    }
+
+    // Обновление Softmax
+    function updateSoftmax() {
+      const s1 = parseFloat(document.getElementById('s1').value);
+      const s2 = parseFloat(document.getElementById('s2').value);
+      const s3 = parseFloat(document.getElementById('s3').value);
+      document.getElementById('s1-val').innerText = s1;
+      document.getElementById('s2-val').innerText = s2;
+      document.getElementById('s3-val').innerText = s3;
+      const ps = softmax([s1, s2, s3]);
+      document.getElementById('p1').innerText = (ps[0]*100).toFixed(1);
+      document.getElementById('p2').innerText = (ps[1]*100).toFixed(1);
+      document.getElementById('p3').innerText = (ps[2]*100).toFixed(1);
+    }
+
+    // Привязка событий
+    ['in1','w1','in2','w2','b','activation'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateNeuron);
+    });
+    ['s1','s2','s3'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateSoftmax);
+    });
+
+    // Инициализация
+    updateNeuron();
+    updateSoftmax();
+  </script>
+</body>
+</html>

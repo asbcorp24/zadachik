@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Self-Supervised Learning «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 15px;
+      line-height: 1.4;
+    }
+    h1, h2 { text-align: center; }
+    section {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    canvas {
+      display: block;
+      margin: 10px auto;
+      border: 1px solid #888;
+      background: #fff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    th { background: #eee; }
+    .controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .controls button {
+      margin: 0 6px;
+      padding: 6px 12px;
+      font-size: 1rem;
+    }
+    #logImg, #logText {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-line;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Self-Supervised Learning</h1>
+  <p style="text-align:center;">ИИ сам придумывает задачки по тексту и картинкам и учится их решать 🧠🎯🤔</p>
+
+  <!-- Image SSL -->
+  <section>
+    <h2>1. Image Inpainting (дополни картинку)</h2>
+    <canvas id="imgCanvas" width="300" height="300"></canvas>
+    <div class="controls">
+      <button id="maskBtn">Шаг 1: Замаскировать фрагмент</button>
+      <button id="reconBtn" disabled>Шаг 2: Восстановить</button>
+      <button id="resetImgBtn">Сбросить</button>
+    </div>
+    <div id="logImg">
+      Журнал Image SSL: нажмите «Шаг 1: Замаскировать фрагмент».
+    </div>
+  </section>
+
+  <!-- Text SSL -->
+  <section>
+    <h2>2. Masked Word Prediction (угадай слово)</h2>
+    <table>
+      <tr><th>Индекс</th><th>Слово</th></tr>
+      <tr><td>0</td><td id="w0">I</td></tr>
+      <tr><td>1</td><td id="w1">love</td></tr>
+      <tr><td>2</td><td id="w2">apples</td></tr>
+      <tr><td>3</td><td id="w3">and</td></tr>
+      <tr><td>4</td><td id="w4">bananas</td></tr>
+    </table>
+    <div class="controls">
+      <button id="maskTextBtn">Шаг 1: Замаскировать слово</button>
+      <button id="predictBtn" disabled>Шаг 2: Предсказать</button>
+      <button id="resetTextBtn">Сбросить</button>
+    </div>
+    <div id="logText">
+      Журнал Text SSL: нажмите «Шаг 1: Замаскировать слово».
+    </div>
+  </section>
+
+  <script>
+  // ===== Image SSL =====
+  const imgCanvas = document.getElementById('imgCanvas'),
+        ctxImg     = imgCanvas.getContext('2d'),
+        logImg     = document.getElementById('logImg');
+  let masked = false, maskRegion = null;
+  // Нарисуем исходную картинку (смайлик)
+  function drawBase() {
+    ctxImg.clearRect(0,0,300,300);
+    // фон
+    ctxImg.fillStyle = '#ffe0bd';
+    ctxImg.fillRect(0,0,300,300);
+    // глаза
+    ctxImg.fillStyle = '#000';
+    ctxImg.beginPath(); ctxImg.arc(100,120,10,0,2*Math.PI); ctxImg.fill();
+    ctxImg.beginPath(); ctxImg.arc(200,120,10,0,2*Math.PI); ctxImg.fill();
+    // рот
+    ctxImg.strokeStyle = '#c33';
+    ctxImg.lineWidth = 5;
+    ctxImg.beginPath();
+    ctxImg.arc(150,180,40,0,Math.PI); ctxImg.stroke();
+  }
+  drawBase();
+  function logI(msg) {
+    logImg.textContent = msg + '\n\n' + logImg.textContent;
+  }
+
+  document.getElementById('maskBtn').onclick = () => {
+    // задаём область (прямоугольник 100×100 в центре)
+    maskRegion = { x:100, y:100, w:100, h:100 };
+    // вырезаем и заливаем серым
+    ctxImg.fillStyle = '#888';
+    ctxImg.fillRect(maskRegion.x, maskRegion.y, maskRegion.w, maskRegion.h);
+    drawBase(); // убедимся, что заливка поверх
+    logI(
+      `Шаг 1: Маскировка.\n`+
+      `Регион: x=${maskRegion.x}, y=${maskRegion.y}, `+
+      `w=${maskRegion.w}, h=${maskRegion.h}\n`+
+      `Покрыли фрагмент серым цветом.`
+    );
+    masked = true;
+    document.getElementById('reconBtn').disabled = false;
+  };
+
+  document.getElementById('reconBtn').onclick = () => {
+    if(!masked) return;
+    // восстанавливаем оригинал только в этой области
+    const imgData = ctxImg.getImageData(maskRegion.x, maskRegion.y, maskRegion.w, maskRegion.h);
+    // для демо просто перерисуем базу целиком
+    drawBase();
+    logI(
+      `Шаг 2: Восстановление.\n`+
+      `Снова нарисовали исходный смайлик за один шаг (имитация inpainting).`
+    );
+  };
+
+  document.getElementById('resetImgBtn').onclick = () => {
+    drawBase();
+    logImg.textContent = 'Журнал Image SSL: нажмите «Шаг 1: Замаскировать фрагмент».';
+    document.getElementById('reconBtn').disabled = true;
+    masked = false;
+  };
+
+
+  // ===== Text SSL =====
+  const words = ['I','love','apples','and','bananas'];
+  const origWords = words.slice();
+  const logText = document.getElementById('logText');
+  let maskedIndex = null;
+
+  function updateTable() {
+    for(let i=0;i<5;i++){
+      document.getElementById('w'+i).textContent = words[i];
+    }
+  }
+  function logT(msg) {
+    logText.textContent = msg + '\n\n' + logText.textContent;
+  }
+
+  document.getElementById('maskTextBtn').onclick = () => {
+    maskedIndex = 2; // всегда маскируем индекс 2
+    words[maskedIndex] = '____';
+    updateTable();
+    logT(
+      `Шаг 1: Маскировка слова.\n`+
+      `Индекс = ${maskedIndex}\n`+
+      `Заменили слово «${origWords[maskedIndex]}» на «____».`
+    );
+    document.getElementById('predictBtn').disabled = false;
+  };
+
+  document.getElementById('predictBtn').onclick = () => {
+    // Демонстрация предсказания: всегда возвращаем origWords[2]
+    const guess = origWords[maskedIndex];
+    words[maskedIndex] = guess;
+    updateTable();
+    // Промежуточный "расчёт" схожести
+    const sim = 0.97; // фиктивная похожесть
+    logT(
+      `Шаг 2: Предсказание слова.\n`+
+      `Сравнили embedding каждого слова из vocab с контекстом:\n`+
+      `  sim('apples') = ${sim.toFixed(2)} — наибольший \n`+
+      `Поэтому слово = «${guess}».`
+    );
+  };
+
+  document.getElementById('resetTextBtn').onclick = () => {
+    for(let i=0;i<5;i++) words[i] = origWords[i];
+    updateTable();
+    logText.textContent = 'Журнал Text SSL: нажмите «Шаг 1: Маскировать слово».';
+    document.getElementById('predictBtn').disabled = true;
+    maskedIndex = null;
+  };
+
+  // инициализация
+  updateTable();
+  document.getElementById('predictBtn').disabled = true;
+  </script>
+
+</body>
+</html>

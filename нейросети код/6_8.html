@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>CNN Demo «для дурачков»</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; line-height: 1.4; }
+    h1 { text-align: center; }
+    .section { margin-bottom: 30px; padding: 15px; background: #f3f3f3; border-radius: 6px; }
+    .mat { display: inline-block; margin: 5px; }
+    .mat table { border-collapse: collapse; }
+    .mat td {
+      width: 40px; height: 40px; text-align: center;
+      border: 1px solid #999; font-size: 0.8rem;
+    }
+    .controls { margin-top: 10px; }
+    button { padding: 8px 14px; font-size: 1rem; margin-right: 10px; }
+    .output { font-size: 1.2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Как работает CNN</h1>
+
+  <div class="section" id="sec-input">
+    <h2>1. Исходное «изображение» 5×5</h2>
+    <p>Это как фото, но всего 5×5 «пикселей» с яркостью 0–255.</p>
+    <div class="mat" id="mat-in"></div>
+    <div class="controls">
+      <button id="btn-rand-in">Randomize Image</button>
+    </div>
+  </div>
+
+  <div class="section" id="sec-conv">
+    <h2>2. Свёртка 3×3</h2>
+    <p>Берём маленький фильтр (3×3), «ездая» по картинке, вычисляем скользящую сумму (веса×пиксели).</p>
+    <div>
+      <span style="vertical-align:top">Фильтр:</span>
+      <div class="mat" id="mat-filter"></div>
+    </div>
+    <div>
+      <span style="vertical-align:top">Feature map 3×3:</span>
+      <div class="mat" id="mat-conv"></div>
+    </div>
+    <div class="controls">
+      <button id="btn-rand-filter">Randomize Filter</button>
+    </div>
+  </div>
+
+  <div class="section" id="sec-relu">
+    <h2>3. ReLU</h2>
+    <p>Отбрасываем все отрицательные значения (делаем их 0), сохраняем только «важные признаки».</p>
+    <div class="mat" id="mat-relu"></div>
+    <div class="controls">
+      <button id="btn-do-relu">Apply ReLU</button>
+    </div>
+  </div>
+
+  <div class="section" id="sec-pool">
+    <h2>4. Max-пулинг 2×2</h2>
+    <p>Сжимаем карту: в каждом 2×2 блоке берём самое большое число.</p>
+    <div class="mat" id="mat-pool"></div>
+    <div class="controls">
+      <button id="btn-do-pool">Apply Pooling</button>
+    </div>
+  </div>
+
+  <div class="section" id="sec-dense">
+    <h2>5. Flatten + Dense → 2 выхода + Softmax</h2>
+    <p>Разворачиваем 2×2 в вектор (4 числа), умножаем на случайные веса + bias и получаем 2 результата.</p>
+    <div>
+      <span style="vertical-align:top">Dense weights (4×2):</span>
+      <div class="mat" id="mat-dw"></div>
+    </div>
+    <div>
+      <span style="vertical-align:top">Bias (2):</span>
+      <div class="mat" id="mat-db"></div>
+    </div>
+    <p>Softmax превращает эти 2 числа в проценты «Кот?» vs «Не кот?»</p>
+    <p class="output">Вероятности: 🐱 <span id="out-cat">–</span> | 🚫 <span id="out-not">–</span></p>
+    <div class="controls">
+      <button id="btn-rand-dense">Randomize Dense Weights</button>
+      <button id="btn-compute-dense">Compute Dense & Softmax</button>
+    </div>
+  </div>
+
+  <script>
+    // —————— Утилиты для матриц ——————
+    function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+    function createMatrix(rows,cols,fn){
+      const M=[]; for(let i=0;i<rows;i++){ M[i]=[]; for(let j=0;j<cols;j++) M[i][j]=fn(i,j); } return M;
+    }
+    function drawMat(container, M){
+      container.innerHTML = '';
+      const tbl = document.createElement('table');
+      M.forEach(row=>{
+        const tr=document.createElement('tr');
+        row.forEach(val=>{
+          const td=document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        tbl.appendChild(tr);
+      });
+      container.appendChild(tbl);
+    }
+    function flatten(M){ return M.reduce((a,row)=>a.concat(row),[]); }
+    function reluMat(M){
+      return M.map(row=>row.map(x=> x>0? x: 0 ));
+    }
+    function conv2d(input,filter){
+      const n=input.length, k=filter.length;
+      const out = createMatrix(n-k+1, n-k+1,()=>0);
+      for(let i=0;i<=n-k;i++){
+        for(let j=0;j<=n-k;j++){
+          let sum=0;
+          for(let u=0;u<k;u++) for(let v=0;v<k;v++){
+            sum += input[i+u][j+v] * filter[u][v];
+          }
+          out[i][j] = Math.round(sum);
+        }
+      }
+      return out;
+    }
+    function maxPool(M, size=2){
+      const n=M.length, m=M[0].length;
+      const out = createMatrix(Math.floor(n/size), Math.floor(m/size),()=>0);
+      for(let i=0;i<out.length;i++){
+        for(let j=0;j<out[0].length;j++){
+          let mx = -Infinity;
+          for(let u=0;u<size;u++) for(let v=0;v<size;v++){
+            mx = Math.max(mx, M[i*size+u][j*size+v]);
+          }
+          out[i][j]=mx;
+        }
+      }
+      return out;
+    }
+    function softmax(arr){
+      const mx = Math.max(...arr);
+      const ex = arr.map(x=>Math.exp(x-mx));
+      const sum = ex.reduce((a,b)=>a+b,0);
+      return ex.map(x=>+(x/sum*100).toFixed(1));
+    }
+
+    // —————— Переменные сети ——————
+    let matIn, matFilter, matConv, matReLU, matPool;
+    let matDW, matDB;
+
+    // —————— Инициализация и отрисовка ——————
+    const elIn    = document.getElementById('mat-in');
+    const elFilt  = document.getElementById('mat-filter');
+    const elConv  = document.getElementById('mat-conv');
+    const elReLU  = document.getElementById('mat-relu');
+    const elPool  = document.getElementById('mat-pool');
+    const elDW    = document.getElementById('mat-dw');
+    const elDB    = document.getElementById('mat-db');
+    const outCat  = document.getElementById('out-cat');
+    const outNot  = document.getElementById('out-not');
+
+    function initImage(){
+      matIn = createMatrix(5,5,()=>randInt(0,255));
+      drawMat(elIn, matIn);
+      doConv();
+    }
+    function initFilter(){
+      matFilter = createMatrix(3,3,()=>randInt(-2,2));
+      drawMat(elFilt, matFilter);
+      doConv();
+    }
+    function doConv(){
+      if(!matIn || !matFilter) return;
+      matConv = conv2d(matIn, matFilter);
+      drawMat(elConv, matConv);
+      elReLU.innerHTML = '';
+      elPool.innerHTML = '';
+    }
+    function doReLU(){
+      if(!matConv) return;
+      matReLU = reluMat(matConv);
+      drawMat(elReLU, matReLU);
+      elPool.innerHTML = '';
+    }
+    function doPool(){
+      if(!matReLU) return;
+      matPool = maxPool(matReLU,2);
+      drawMat(elPool, matPool);
+    }
+    function initDense(){
+      matDW = createMatrix(4,2,()=>randInt(-3,3));
+      matDB = [randInt(-3,3), randInt(-3,3)];
+      drawMat(elDW, matDW);
+      drawMat(elDB, [matDB]);
+      outCat.textContent = '-';
+      outNot.textContent = '-';
+    }
+    function computeDense(){
+      if(!matPool) return;
+      const vec = flatten(matPool); // length=4
+      const sums = [0,0];
+      for(let k=0;k<2;k++){
+        sums[k] = matDB[k];
+        for(let i=0;i<4;i++){
+          sums[k] += vec[i] * matDW[i][k];
+        }
+      }
+      const probs = softmax(sums);
+      outCat.textContent = probs[0] + '%';
+      outNot.textContent = probs[1] + '%';
+    }
+
+    // —————— Кнопки ——————
+    document.getElementById('btn-rand-in').onclick = initImage;
+    document.getElementById('btn-rand-filter').onclick = initFilter;
+    document.getElementById('btn-do-relu').onclick = doReLU;
+    document.getElementById('btn-do-pool').onclick = doPool;
+    document.getElementById('btn-rand-dense').onclick = initDense;
+    document.getElementById('btn-compute-dense').onclick = computeDense;
+
+    // —————— Старт ——————
+    initImage();
+    initFilter();
+    initDense();
+  </script>
+</body>
+</html>

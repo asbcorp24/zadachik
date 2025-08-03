@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Демо регуляризации нейросетей «для дурачков»</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 30px auto;
+      line-height: 1.5;
+      padding: 0 15px;
+    }
+    h1 { text-align: center; margin-bottom: 30px; }
+    section { background: #f9f9f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+    h2 { margin-top: 0; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .row label { font-size: 0.95rem; }
+    .row input, .row select, .row button { font-size: 1rem; padding: 4px 8px; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    table, td, th { border: 1px solid #aaa; }
+    td, th { padding: 6px 10px; text-align: center; }
+    #info-dropout, #info-bn, #info-reg { background: #fff; padding: 10px; margin-top: 10px; border-radius: 4px; font-family: monospace; white-space: pre-line; }
+  </style>
+</head>
+<body>
+
+  <h1>Регуляризация нейросетей «для дурачков»</h1>
+
+  <section id="dropout-section">
+    <h2>A. Dropout — отключение нейронов наугад 🙈</h2>
+    <p>На входе у нас 5 нейронов с выходами (сигналами):</p>
+    <table id="dropout-inputs">
+      <tr><th>Нейрон</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+      <tr><th>Выход</th><td id="out0">0.20</td><td id="out1">0.50</td><td id="out2">0.80</td><td id="out3">0.30</td><td id="out4">0.60</td></tr>
+    </table>
+    <div class="row">
+      <label>Вероятность Dropout (p): <input type="number" id="dropout-p" value="0.4" min="0" max="1" step="0.1"></label>
+      <button id="apply-dropout">Применить Dropout</button>
+      <button id="reset-dropout">Сбросить</button>
+    </div>
+    <div id="info-dropout">Нажми «Применить Dropout», чтобы увидеть, какие нейроны отключились и как мы масштабируем оставшиеся.</div>
+  </section>
+
+  <section id="batchnorm-section">
+    <h2>B. BatchNorm — выравнивание сигналов 🧹</h2>
+    <p>Предположим, что после слоя мы получили 6 значений (пред-активации):</p>
+    <table id="bn-inputs">
+      <tr><th>Нейрон</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr>
+      <tr><th>Значение</th>
+        <td id="bn0">1.0</td><td id="bn1">2.0</td><td id="bn2">3.0</td>
+        <td id="bn3">4.0</td><td id="bn4">5.0</td><td id="bn5">6.0</td>
+      </tr>
+    </table>
+    <div class="row">
+      <button id="compute-bn">Вычислить BatchNorm</button>
+      <button id="reset-bn">Сбросить</button>
+    </div>
+    <div id="info-bn">Нажми «Вычислить BatchNorm», чтобы увидеть среднее, дисперсию и нормированные значения.</div>
+  </section>
+
+  <section id="reg-section">
+    <h2>C. L1 и L2 регуляризация — штраф за большие веса 📏</h2>
+    <p>У нас есть 5 весов:</p>
+    <div class="row">
+      <label>Вес w1: <input type="number" id="w0" value="0.5" step="0.1"></label>
+      <label>Вес w2: <input type="number" id="w1" value="-1.2" step="0.1"></label>
+      <label>Вес w3: <input type="number" id="w2" value="2.0" step="0.1"></label>
+      <label>Вес w4: <input type="number" id="w3" value="-0.7" step="0.1"></label>
+      <label>Вес w5: <input type="number" id="w4" value="1.5" step="0.1"></label>
+    </div>
+    <div class="row">
+      <label>Параметр λ: <input type="number" id="lambda" value="0.1" step="0.01"></label>
+      <button id="compute-reg">Вычислить штрафы</button>
+      <button id="reset-reg">Сбросить</button>
+    </div>
+    <div id="info-reg">Нажми «Вычислить штрафы», чтобы увидеть L1 и L2 регуляризацию.</div>
+  </section>
+
+  <script>
+    // === Dropout ===
+    const baseOut = [0.2,0.5,0.8,0.3,0.6];
+    let currentMask = [];
+    document.getElementById('apply-dropout').onclick = ()=>{
+      const p = parseFloat(document.getElementById('dropout-p').value);
+      const keepProb = 1 - p;
+      currentMask = baseOut.map(_=> Math.random() < keepProb ? 1 : 0 );
+      // apply mask and scale
+      let info = `p = ${p}\nkeepProb = 1 - p = ${keepProb}\n\n`;
+      info += `Нейроны и маска:\n`;
+      baseOut.forEach((v,i)=>{
+        info += `  Нейрон ${i+1}: out=${v.toFixed(2)}  mask=${currentMask[i]}\n`;
+      });
+      info += `\nПосле Dropout (и масштабирования / keepProb):\n`;
+      baseOut.forEach((v,i)=>{
+        const newV = currentMask[i] ? v/keepProb : 0;
+        info += `  Нейрон ${i+1}: ${(newV).toFixed(2)}\n`;
+        document.getElementById('out'+i).textContent = newV.toFixed(2);
+      });
+      document.getElementById('info-dropout').textContent = info;
+    };
+    document.getElementById('reset-dropout').onclick = ()=>{
+      baseOut.forEach((v,i)=> document.getElementById('out'+i).textContent = v.toFixed(2));
+      document.getElementById('info-dropout').textContent = 'Нажми «Применить Dropout», чтобы увидеть, какие нейроны отключились и как мы масштабируем оставшиеся.';
+    };
+
+    // === BatchNorm ===
+    const bnVals = [1,2,3,4,5,6];
+    document.getElementById('compute-bn').onclick = ()=>{
+      const eps = 1e-5;
+      const mean = bnVals.reduce((a,b)=>a+b,0)/bnVals.length;
+      const variance = bnVals.reduce((a,b)=>a+(b-mean)**2,0)/bnVals.length;
+      const info = 
+        `Mean = (1+2+3+4+5+6)/6 = ${mean.toFixed(2)}\n` +
+        `Var = sum((x-mean)²)/6 = ${variance.toFixed(2)}\n\n` +
+        `Нормированные значения (x - mean)/√(var+ε):\n` +
+        bnVals.map((v,i)=> `  N${i+1}: (${v}-${mean.toFixed(2)})/√(${variance.toFixed(2)}+ε) = ${(((v-mean)/Math.sqrt(variance+eps)).toFixed(4))}`).join('\n');
+      bnVals.forEach((v,i)=> document.getElementById('bn'+i).textContent = v.toFixed(2));
+      document.getElementById('info-bn').textContent = info;
+    };
+    document.getElementById('reset-bn').onclick = ()=>{
+      bnVals.forEach((v,i)=> document.getElementById('bn'+i).textContent = v.toFixed(2));
+      document.getElementById('info-bn').textContent = 'Нажми «Вычислить BatchNorm», чтобы увидеть среднее, дисперсию и нормированные значения.';
+    };
+
+    // === L1/L2 Regularization ===
+    document.getElementById('compute-reg').onclick = ()=>{
+      const ws = [0,1,2,3,4].map(i=>parseFloat(document.getElementById('w'+i).value));
+      const λ = parseFloat(document.getElementById('lambda').value);
+      const sumAbs = ws.reduce((a,b)=>a+Math.abs(b),0);
+      const sumSq  = ws.reduce((a,b)=>a+b*b,0);
+      const L1 = λ * sumAbs;
+      const L2 = λ * sumSq;
+      let info = 
+        `Веса: [${ws.map(w=>w.toFixed(2)).join(', ')}]\n` +
+        `λ = ${λ}\n\n` +
+        `L1: λ·∑|w| = ${λ}·${sumAbs.toFixed(2)} = ${L1.toFixed(4)}\n` +
+        `L2: λ·∑w² = ${λ}·${sumSq.toFixed(2)} = ${L2.toFixed(4)}\n`;
+      document.getElementById('info-reg').textContent = info;
+    };
+    document.getElementById('reset-reg').onclick = ()=>{
+      document.getElementById('info-reg').textContent = 'Нажми «Вычислить штрафы», чтобы увидеть L1 и L2 регуляризацию.';
+    };
+  </script>
+
+</body>
+</html>
