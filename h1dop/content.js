@@ -1991,90 +1991,125 @@ function insertTest(b64) {
     details.appendChild(container);
 
     replaceSelectedTextWith(details);
-
+const scriptId = 'test-runner-script-z'  ;
+  
+  // Если уже есть старый скрипт — удаляем
+  const old = document.getElementById(scriptId);
+  if (old) {
+    old.remove();
+  }
     // Генерируем скрипт оживления
     const script = document.createElement('script');
-    script.textContent = `
-(function(){
-  function renderTestRunner(container) {
-    const data = JSON.parse(decodeURIComponent(escape(window.atob(container.dataset.test))));
+	 script.id = scriptId;
+    script.textContent = `(function(){
+  // Функция для отрисовки итогов
+  function displayResult(container, score, total, results, attemptsLeft) {
     container.innerHTML = '';
+    const summary = document.createElement('div');
+    summary.innerHTML = '<h3>Результат теста</h3><p>Вы правильно ответили на <b>'+score+'</b> из <b>'+total+'</b> вопросов.</p>   <p>Попыток осталось: <b>'+attemptsLeft+'</b></p>    ';
+    const list = document.createElement('ul');
+    results.forEach(res => {
+      const li = document.createElement('li');
+      li.innerHTML = '<b>'+res.question+'</b><br>Правильные ответы: '+res.correctAnswers.join(', ')+'';
+      list.appendChild(li);
+    });
+    summary.appendChild(list);
+    container.appendChild(summary);
+  }
+
+  // Основная логика по каждому контейнеру .test
+  document.querySelectorAll('.test').forEach(container => {
+    const b64 = container.dataset.test;
+    const attemptsKey = 'testAttempts_' + b64;
+    const resultKey   = 'testResult_'   + b64;
+
+    let attempts = parseInt(localStorage.getItem(attemptsKey) || '0', 10);
+
+    // Если попыток >=3 — показываем сохранённый результат
+    if (attempts >= 3) {
+      const stored = localStorage.getItem(resultKey);
+      if (stored) {
+        const { score, total, results } = JSON.parse(stored);
+        displayResult(container, score, total, results, 0);
+      } else {
+        container.innerHTML = '<p>Вы исчерпали все попытки этого теста.</p>';
+      }
+      return;
+    }
+
+    // Иначе — рендерим форму
+    const data = JSON.parse(decodeURIComponent(escape(window.atob(b64))));
+    container.innerHTML = '';  // очистим содержимое
+
     const title = document.createElement('h3');
     title.innerText = 'Пройдите тест';
     container.appendChild(title);
 
     const form = document.createElement('form');
-    data.questions.forEach(function(q, i) {
-      const qCard = document.createElement('div');
-      const qText = document.createElement('p');
-      qText.innerText = q.question;
-      qCard.appendChild(qText);
+    data.questions.forEach((q, i) => {
+      const qDiv = document.createElement('div');
+      const p = document.createElement('p');
+      p.innerText = q.question;
+      qDiv.appendChild(p);
 
-      const ansList = document.createElement('div');
-      ansList.className = 'answer-list';
-
-      q.answers.forEach(function(ans, j) {
+      q.answers.forEach((ans, j) => {
         const label = document.createElement('label');
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.name = 'q' + i;
         cb.value = j;
         label.append(cb, document.createTextNode(ans));
-        ansList.appendChild(label);
+        qDiv.appendChild(label);
+		 const cbr = document.createElement('br');
+		  qDiv.appendChild(cbr);
       });
 
-      qCard.appendChild(ansList);
-      form.appendChild(qCard);
+      form.appendChild(qDiv);
     });
+    container.appendChild(form);
 
     const submitBtn = document.createElement('button');
     submitBtn.type = 'button';
     submitBtn.innerText = 'Проверить';
-    submitBtn.addEventListener('click', function() {
+    container.appendChild(submitBtn);
+
+    submitBtn.addEventListener('click', () => {
+      // проверяем, остались ли попытки
+      if (attempts >= 3) {
+        alert('Попытки исчерпаны.');
+        return;
+      }
+
+      // считаем результат
       let score = 0;
       const results = [];
-
-      data.questions.forEach(function(q, i) {
-        const selected = Array.from(form.querySelectorAll('input[name="q' + i + '"]:checked'))
-                              .map(function(inp) { return parseInt(inp.value); })
-                              .sort(function(a,b){ return a-b; });
-        const correct = q.correct.slice().sort(function(a,b){ return a-b; });
-        const isCorrect = selected.length === correct.length && selected.every(function(v,idx){ return v === correct[idx]; });
-
-        if (isCorrect) {
-          score++;
-        }
+      data.questions.forEach((q, i) => {
+        const selected = Array.from(form.querySelectorAll('input[name="q'+i+'"]:checked'))
+                              .map(cb => parseInt(cb.value))
+                              .sort((a,b)=>a-b);
+        const correct  = q.correct.slice().sort((a,b)=>a-b);
+        const ok = selected.length===correct.length && selected.every((v,idx)=>v===correct[idx]);
+        if (ok) score++;
         results.push({
-          question: q.question,
-          correctAnswers: q.correct.map(function(idx) { return q.answers[idx]; })
+          question:      q.question,
+          correctAnswers:q.correct.map(idx=>q.answers[idx])
         });
       });
 
-      // После прохождения теста: показываем результат
-      container.innerHTML = '';
-      const summary = document.createElement('div');
-      summary.innerHTML = '<h3>Результат теста</h3>' +
-                          '<p>Вы правильно ответили на <b>' + score + '</b> из <b>' + data.questions.length + '</b> вопросов.</p>';
+      // сохраняем попытку и результат
+      attempts++;
+      localStorage.setItem(attemptsKey, attempts);
+      localStorage.setItem(resultKey, JSON.stringify({
+        score,
+        total: data.questions.length,
+        results
+      }));
 
-      const list = document.createElement('ul');
-      results.forEach(function(res) {
-        const item = document.createElement('li');
-        item.innerHTML = '<b>' + res.question + '</b><br>Правильные ответы: ' + res.correctAnswers.join(', ');
-        list.appendChild(item);
-      });
-
-      summary.appendChild(list);
-      container.appendChild(summary);
+      // показываем итог
+      displayResult(container, score, data.questions.length, results, 3 - attempts);
     });
-
-    form.appendChild(submitBtn);
-    container.appendChild(form);
-  }
-  document.querySelectorAll('.test').forEach(function(container) {
-    renderTestRunner(container);
   });
-})();
-`;
+})();`;
     document.body.appendChild(script);
 }
 
