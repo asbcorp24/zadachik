@@ -1,4 +1,39 @@
 let savedRange = null;
+function createProgressBar() {
+    let bar = document.getElementById("extProgressBar");
+
+    if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "extProgressBar";
+        bar.style.position = "fixed";
+        bar.style.top = "0";
+        bar.style.left = "0";
+        bar.style.width = "0%";
+        bar.style.height = "5px";
+        bar.style.background = "#4caf50";
+        bar.style.zIndex = "999999";
+        bar.style.transition = "width 0.2s ease";
+        document.body.appendChild(bar);
+    }
+
+    return bar;
+}
+
+function updateProgressBar(percent) {
+    const bar = createProgressBar();
+    bar.style.width = percent + "%";
+}
+
+function finishProgressBar() {
+    const bar = createProgressBar();
+    bar.style.width = "100%";
+
+    setTimeout(() => {
+        bar.style.opacity = "0";
+        setTimeout(() => bar.remove(), 500);
+    }, 500);
+}
+
 function wrapSelectedText() {
 	
     const selection = window.getSelection();
@@ -1849,6 +1884,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }});
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+
     if (request.action === "obr") {
         const scripts = Array.from(document.querySelectorAll("script"));
 
@@ -1879,7 +1915,82 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }});
 	
 	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "savef") {
+   
+	console.log(request.action);
+	 if (request.action === "tojpg") {
+		 console.log('tojpg2');
+
+
+		 (async () => {
+
+  // 1. Селектор по умолчанию
+  let selector = prompt(
+    'Введите CSS-селектор элементов, которые хотите превратить в картинки:',
+    'div[dir="ltr"] code'
+  );
+
+  if (!selector) {
+    console.warn('Отменено пользователем.');
+    return;
+  }
+
+  // 2. Находим элементы
+  const targetElements = document.querySelectorAll(selector);
+  const total = targetElements.length;
+  if (targetElements.length === 0) {
+    console.error(`❌ Элементы '${selector}' не найдены!`);
+    return;
+  }
+
+  console.log(`✅ Найдено ${targetElements.length} элементов. Начинаем обработку...`);
+    let done = 0;
+    updateProgressBar(0);
+  // 3. Обрабатываем каждый элемент
+  for (const element of targetElements) {
+    try {
+      // Создаём скриншот элемента
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+
+      // Генерируем JPEG
+      const imgDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      // Создаем IMG
+      const img = new Image();
+      img.src = imgDataUrl;
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.style.display = 'block';
+      img.style.margin = '10px 0';
+      img.alt = 'Скриншот HTML-элемента';
+
+      // Заменяем исходный элемент
+      element.replaceWith(img);
+
+      console.log('✅ Элемент заменён на изображение');
+    } catch (e) {
+      console.error('❌ Ошибка при обработке:', e);
+    }
+ done++;
+
+        updateProgressBar(((done / total) * 100).toFixed(1));
+
+        if (done === total) finishProgressBar();
+    // ❗ УБРАЛ return — теперь обрабатываются все элементы
+  }
+
+  console.log('🎉 Все элементы успешно заменены на изображения!');
+
+})();
+
+		 
+	 }
+
+   if (request.action === "savef") {
         const htmlContent = document.documentElement.outerHTML;
 
     // Создаем Blob-объект для данных
@@ -1991,125 +2102,90 @@ function insertTest(b64) {
     details.appendChild(container);
 
     replaceSelectedTextWith(details);
-const scriptId = 'test-runner-script-z'  ;
-  
-  // Если уже есть старый скрипт — удаляем
-  const old = document.getElementById(scriptId);
-  if (old) {
-    old.remove();
-  }
+
     // Генерируем скрипт оживления
     const script = document.createElement('script');
-	 script.id = scriptId;
-    script.textContent = `(function(){
-  // Функция для отрисовки итогов
-  function displayResult(container, score, total, results, attemptsLeft) {
+    script.textContent = `
+(function(){
+  function renderTestRunner(container) {
+    const data = JSON.parse(decodeURIComponent(escape(window.atob(container.dataset.test))));
     container.innerHTML = '';
-    const summary = document.createElement('div');
-    summary.innerHTML = '<h3>Результат теста</h3><p>Вы правильно ответили на <b>'+score+'</b> из <b>'+total+'</b> вопросов.</p>   <p>Попыток осталось: <b>'+attemptsLeft+'</b></p>    ';
-    const list = document.createElement('ul');
-    results.forEach(res => {
-      const li = document.createElement('li');
-      li.innerHTML = '<b>'+res.question+'</b><br>Правильные ответы: '+res.correctAnswers.join(', ')+'';
-      list.appendChild(li);
-    });
-    summary.appendChild(list);
-    container.appendChild(summary);
-  }
-
-  // Основная логика по каждому контейнеру .test
-  document.querySelectorAll('.test').forEach(container => {
-    const b64 = container.dataset.test;
-    const attemptsKey = 'testAttempts_' + b64;
-    const resultKey   = 'testResult_'   + b64;
-
-    let attempts = parseInt(localStorage.getItem(attemptsKey) || '0', 10);
-
-    // Если попыток >=3 — показываем сохранённый результат
-    if (attempts >= 3) {
-      const stored = localStorage.getItem(resultKey);
-      if (stored) {
-        const { score, total, results } = JSON.parse(stored);
-        displayResult(container, score, total, results, 0);
-      } else {
-        container.innerHTML = '<p>Вы исчерпали все попытки этого теста.</p>';
-      }
-      return;
-    }
-
-    // Иначе — рендерим форму
-    const data = JSON.parse(decodeURIComponent(escape(window.atob(b64))));
-    container.innerHTML = '';  // очистим содержимое
-
     const title = document.createElement('h3');
     title.innerText = 'Пройдите тест';
     container.appendChild(title);
 
     const form = document.createElement('form');
-    data.questions.forEach((q, i) => {
-      const qDiv = document.createElement('div');
-      const p = document.createElement('p');
-      p.innerText = q.question;
-      qDiv.appendChild(p);
+    data.questions.forEach(function(q, i) {
+      const qCard = document.createElement('div');
+      const qText = document.createElement('p');
+      qText.innerText = q.question;
+      qCard.appendChild(qText);
 
-      q.answers.forEach((ans, j) => {
+      const ansList = document.createElement('div');
+      ansList.className = 'answer-list';
+
+      q.answers.forEach(function(ans, j) {
         const label = document.createElement('label');
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.name = 'q' + i;
         cb.value = j;
         label.append(cb, document.createTextNode(ans));
-        qDiv.appendChild(label);
-		 const cbr = document.createElement('br');
-		  qDiv.appendChild(cbr);
+        ansList.appendChild(label);
       });
 
-      form.appendChild(qDiv);
+      qCard.appendChild(ansList);
+      form.appendChild(qCard);
     });
-    container.appendChild(form);
 
     const submitBtn = document.createElement('button');
     submitBtn.type = 'button';
     submitBtn.innerText = 'Проверить';
-    container.appendChild(submitBtn);
-
-    submitBtn.addEventListener('click', () => {
-      // проверяем, остались ли попытки
-      if (attempts >= 3) {
-        alert('Попытки исчерпаны.');
-        return;
-      }
-
-      // считаем результат
+    submitBtn.addEventListener('click', function() {
       let score = 0;
       const results = [];
-      data.questions.forEach((q, i) => {
-        const selected = Array.from(form.querySelectorAll('input[name="q'+i+'"]:checked'))
-                              .map(cb => parseInt(cb.value))
-                              .sort((a,b)=>a-b);
-        const correct  = q.correct.slice().sort((a,b)=>a-b);
-        const ok = selected.length===correct.length && selected.every((v,idx)=>v===correct[idx]);
-        if (ok) score++;
+
+      data.questions.forEach(function(q, i) {
+        const selected = Array.from(form.querySelectorAll('input[name="q' + i + '"]:checked'))
+                              .map(function(inp) { return parseInt(inp.value); })
+                              .sort(function(a,b){ return a-b; });
+        const correct = q.correct.slice().sort(function(a,b){ return a-b; });
+        const isCorrect = selected.length === correct.length && selected.every(function(v,idx){ return v === correct[idx]; });
+
+        if (isCorrect) {
+          score++;
+        }
         results.push({
-          question:      q.question,
-          correctAnswers:q.correct.map(idx=>q.answers[idx])
+          question: q.question,
+          correctAnswers: q.correct.map(function(idx) { return q.answers[idx]; })
         });
       });
 
-      // сохраняем попытку и результат
-      attempts++;
-      localStorage.setItem(attemptsKey, attempts);
-      localStorage.setItem(resultKey, JSON.stringify({
-        score,
-        total: data.questions.length,
-        results
-      }));
+      // После прохождения теста: показываем результат
+      container.innerHTML = '';
+      const summary = document.createElement('div');
+      summary.innerHTML = '<h3>Результат теста</h3>' +
+                          '<p>Вы правильно ответили на <b>' + score + '</b> из <b>' + data.questions.length + '</b> вопросов.</p>';
 
-      // показываем итог
-      displayResult(container, score, data.questions.length, results, 3 - attempts);
+      const list = document.createElement('ul');
+      results.forEach(function(res) {
+        const item = document.createElement('li');
+        item.innerHTML = '<b>' + res.question + '</b><br>Правильные ответы: ' + res.correctAnswers.join(', ');
+        list.appendChild(item);
+      });
+
+      summary.appendChild(list);
+      container.appendChild(summary);
     });
+
+    form.appendChild(submitBtn);
+    container.appendChild(form);
+  }
+  document.querySelectorAll('.test').forEach(function(container) {
+    renderTestRunner(container);
   });
-})();`;
+})();
+`;
     document.body.appendChild(script);
 }
 

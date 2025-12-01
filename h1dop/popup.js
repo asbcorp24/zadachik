@@ -8,8 +8,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const addUniqueIdsButton = document.getElementById('addUniqueIdsButton');
     const encryptButton = document.getElementById('encryptButton'); // Новая кнопка
     const replaceButton = document.getElementById('replaceButton'); // Новая кнопка
+	 const tojpg = document.getElementById('tojpg'); // Новая кнопка
 	    const savef = document.getElementById('savef'); // Новая кнопка
-
+tojpg.addEventListener('click', function() {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+		console.log("tojpg");
+        chrome.tabs.sendMessage(tabs[0].id, { action: "tojpg" });
+    });
+});
     // Обработчик для оборачивания выделенного текста в <h1>
 	   savef.addEventListener('click', function() {
 		
@@ -268,3 +274,4 @@ document.getElementById('addTest').addEventListener('click', () => {
     });
 });
 
+ 
